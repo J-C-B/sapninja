@@ -11,7 +11,9 @@ You will need to use your own creativity to use the function provided here to en
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+You will need to download and implement the following ABAP functions:
+   * [http://code.google.com/p/sapninja/source/browse/trunk/tools/functionmodules/zmodexp.txt ZMODEXP]
+   * [http://code.google.com/p/sapninja/source/browse/trunk/tools/functionmodules/zdec2bin.txt ZDEC2BIN]
+   * Once you have implemented them, encryption and decryption can be done by using function ZMODEXP. 
+
+= Hypothetical Examp =
