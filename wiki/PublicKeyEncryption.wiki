@@ -16,4 +16,11 @@ You will need to download and implement the following ABAP functions:
    * [http://code.google.com/p/sapninja/source/browse/trunk/tools/functionmodules/zdec2bin.txt ZDEC2BIN]
    * Once you have implemented them, encryption and decryption can be done by using function ZMODEXP. 
 
-= Hypothetical Examp =
+= Hypothetical Example =
+   * Say you have an application with an annual license.  Your license checking routine checks to see if license year has expired.  For our example, we are going to issue a license for the year 2011.
+   * Using the example keys from the Wikipedia example we decide to use the following keys:
+<verbatim>
+private key =
+public key
+modulus
+</verbatim>
