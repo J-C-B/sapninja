@@ -19,8 +19,10 @@ You will need to download and implement the following ABAP functions:
 = Hypothetical Example =
    * Say you have an application with an annual license.  Your license checking routine checks to see if license year has expired.  For our example, we are going to issue a license for the year 2011.
    * Using the example keys from the Wikipedia example we decide to use the following keys:
-<verbatim>
-private key =
-public key
-modulus
-</verbatim>
+{{{
+private key = 2753
+public key  = 17
+modulus     = 3233
+}}}
+   * You might decide to convert "2011" into zero-padded ASCII codes with 3 digits per character.  The packed string will be 050048049049
+   * 
