@@ -25,4 +25,26 @@ public key  = 17
 modulus     = 3233
 }}}
    * You might decide to convert "2011" into zero-padded ASCII codes with 3 digits per character.  The packed string will be 050048049049
-   * 
+   * To stop people from identifying the characters easily by picking repetitions in the encrypted codes, you may decide to encrypt in chunks of 2 characters.  If you make the chunk too big, you risk arithmetic overflow ... happy to accept code improvements.
+   * You want to encrypt 050048049049, broken up into the numbers
+{{{
+05
+00
+48
+04
+90
+49
+}}}
+   * Using the MODEXP function with private key 2753 (which only you know as the developer) and modulus 3233, you encrypt it to the following numbers, which you might pad out to 4 digits.
+{{{
+3086
+0000
+0624
+1387
+1668
+2906
+1771
+}}}
+   * So you issue the user with a license key = 3086000006241387166829061771
+   * On the other side, your program knows the license is packed in chunks of 4 and it can have the completely-visible public key of 17.
+   * Using the MODEXP function with public key 17, which anyone can see, and modulus 3233, you break the license key into groups of four digits (3086, 0000,  ....) and decrypt each one to get back to the original, which you can translate back to 2011 via the ASCII chart.
