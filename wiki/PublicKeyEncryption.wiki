@@ -1,0 +1,17 @@
+#summary ABAP implementation of RSA encryption
+
+= Introduction =
+
+It is beyond the scope of this WIKI to describe the theory behind public key encryption.  A very good summary can be found at http://en.wikipedia.org/wiki/RSA.  
+
+SAPNINJA has provided ABAP implementations of two functions that provide the most basic building blocks you need.
+
+You will need to use your own creativity to use the function provided here to encrypt text.  You will also need to generate your own public key, private key and modulus to be secure.  There are tools available on the web that will help you do this. 
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
