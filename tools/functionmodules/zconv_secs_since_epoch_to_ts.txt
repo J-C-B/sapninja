@@ -1,0 +1,87 @@
+FUNCTION ZCONV_SECS_SINCE_EPOCH_TO_TS.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     VALUE(SECONDS_SINCE) TYPE  TIMESTAMP
+*"  EXPORTING
+*"     VALUE(RESULT) TYPE  TIMESTAMP
+*"----------------------------------------------------------------------
+* ----------------------------------------------------------------------
+* Convert seconds since 01/01/1970 to local timestamp
+* Copyright (C) 2011  Cooke Computing Pty Ltd
+* 
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+
+  DATA: L_EPOCH_UTC TYPE TIMESTAMP VALUE 19700101000000,
+        L_EPOCH_LOC TYPE TIMESTAMP,
+        L_DATETIME(14),
+        L_DIFFSECS    TYPE INT4,
+        L_DATE1   TYPE D,
+        L_DATE2   TYPE D,
+        L_TIME1   TYPE T,
+        L_TIME2   TYPE T,
+        L_DST     TYPE C LENGTH 1,
+        L_DIFF    TYPE I.
+
+* Convert the EPOCH timestamp to what it is in local time.
+  CONVERT TIME STAMP L_EPOCH_UTC TIME ZONE SY-ZONLO
+          INTO DATE L_DATE1 TIME L_TIME1 DAYLIGHT SAVING TIME L_DST.
+
+  CONCATENATE L_DATE1 L_TIME1 INTO L_DATETIME.
+  MOVE L_DATETIME TO L_EPOCH_LOC.
+
+* Calculate the time difference (in seconds) between UTC and the local timezone
+  IF L_EPOCH_UTC <= L_EPOCH_LOC.
+    MOVE L_EPOCH_UTC TO L_DATETIME.
+    L_DATE1 = L_DATETIME+0(8).
+    L_TIME1 = L_DATETIME+8(6).
+    MOVE L_EPOCH_LOC TO L_DATETIME.
+    L_DATE2 = L_DATETIME+0(8).
+    L_TIME2 = L_DATETIME+8(6).
+    L_DIFF = 1.
+  ELSE.
+    MOVE L_EPOCH_UTC TO L_DATETIME.
+    L_DATE1 = L_DATETIME+0(8).
+    L_TIME1 = L_DATETIME+8(6).
+    MOVE L_EPOCH_LOC TO L_DATETIME.
+    L_DATE2 = L_DATETIME+0(8).
+    L_TIME2 = L_DATETIME+8(6).
+    L_DIFF = -1.
+  ENDIF.
+
+  CALL FUNCTION 'SWI_DURATION_DETERMINE'
+    EXPORTING
+      START_DATE = L_DATE1
+      END_DATE   = L_DATE2
+      START_TIME = L_TIME1
+      END_TIME   = L_TIME2
+    IMPORTING
+      DURATION   = L_DIFFSECS.
+  IF SY-SUBRC NE 0.
+    EXIT.
+  ENDIF.
+
+* Now add the local time difference from UTC to the supplied seconds-since-epoch to get the time in normal format
+  L_DIFF = ( L_DIFF * L_DIFFSECS ) + SECONDS_SINCE.
+
+  CALL FUNCTION 'TIMESTAMP_DURATION_ADD'
+    EXPORTING
+      TIMESTAMP_IN  = L_EPOCH_UTC
+      TIMEZONE      = 'UTC'
+      DURATION      = L_DIFF
+      UNIT          = 'S'
+    IMPORTING
+      TIMESTAMP_OUT = RESULT.
+ENDFUNCTION.
