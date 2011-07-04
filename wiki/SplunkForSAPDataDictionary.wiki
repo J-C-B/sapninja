@@ -25,3 +25,17 @@
 || MSG || || XMIEXTMSG ||
 || SEVERITY || || FLAG ||
 || SENT || || FLAG ||
+== ZPLUNK_CCMS_C ==
+=== ZPLUNK_CCMS_C Table Fields ===
+|| *Field* || *Key* || *Data Element* ||
+|| SAMPLEDATE || X || AS4DATE ||
+|| SAMPLETIME || X || AS4TIME ||
+|| HOST || X ||	PFEHOSTNAM ||
+|| SYSNAME || X || PFEHOSTNAM ||
+|| SYSNR || X || PFESYSNR ||
+|| MTECLASS || X || TXT120 ||
+|| MSG || || XMIEXTMSG ||
+|| SEVERITY || || FLAG ||
+|| SENT || || FLAG ||
+|| OBSERVATION || || ALPERALVAL ||
+|| OBSERVATION_UOM || || ALUNIT ||
