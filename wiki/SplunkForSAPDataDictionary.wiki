@@ -1,6 +1,7 @@
 #summary Data dictionary definitions for SAP Splunk Collector tools
 
 = TABLES =
+----
 == ZPLUNK_CCMS_A ==
 === ZPLUNK_CCMS_A Table Attributes ===
 || *Attribute or Path* || *Setting* ||
@@ -25,7 +26,7 @@
 || MSG || || XMIEXTMSG ||
 || SEVERITY || || FLAG ||
 || SENT || || FLAG ||
-
+----
 == ZPLUNK_CCMS_C ==
 === ZPLUNK_CCMS_C Table Attributes ===
 || *Attribute or Path* || *Setting* ||
