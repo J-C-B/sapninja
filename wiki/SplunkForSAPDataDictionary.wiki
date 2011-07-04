@@ -4,7 +4,15 @@
 == ZPLUNK_CCMS_A ==
 === ZPLUNK_CCMS_A Table Attributes ===
 || *Attribute or Path* || *Setting* ||
-|| `&#187;` || ||
+|| Table_Name || ZPLUNK_CCMS_A ||
+|| Short Description || Splunk Collector: CCMS Alerts ||
+|| Attributes => Package || ZPLUNK ||
+|| Delivery and Maintenance => Delivery Class || L ||
+|| Delivery and Maintenance => Data Browser/Table View Maint. || Display/Maintenance Allowed ||
+|| Technical Settings => Data Class || SPROT ||
+|| Technical Settings => Size Category || 5 ||
+|| Technical Settings => Buffering || Buffering not allowed ||
+|| Menu => Extras => Enhancement Category || Cannot be enhanced ||
 
 === ZPLUNK_CCMS_A Table Fields ===
 || *Field* || *Key* || *Data Element* ||
