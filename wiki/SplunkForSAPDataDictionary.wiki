@@ -1,11 +1,8 @@
 #summary Data dictionary definitions for SAP Splunk Collector tools
 
-= Introduction =
-This WIKI page contains the data dictionary definitions required by the SAP Splunk Collector.
-
 = TABLES =
 == ZPLUNK_CCMS_A ==
 === Table Attributes ===
-||*Field*||*Key*||*Data Element*||
+|| *Field* || *Key* || *Data Element* ||
 ||SAMPLEDATE||X||AS4DATE||
 === Table Fields ===
