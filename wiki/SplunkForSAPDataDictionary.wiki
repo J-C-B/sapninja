@@ -4,7 +4,7 @@
 == ZPLUNK_CCMS_A ==
 === ZPLUNK_CCMS_A Table Attributes ===
 || *Attribute or Path* || *Setting* ||
-|| Table_Name || ZPLUNK_CCMS_A ||
+|| `Table_Name` || ZPLUNK_CCMS_A ||
 || Short Description || Splunk Collector: CCMS Alerts ||
 || Attributes => Package || ZPLUNK ||
 || Delivery and Maintenance => Delivery Class || L ||
