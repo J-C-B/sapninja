@@ -4,7 +4,7 @@
 == ZPLUNK_CCMS_A ==
 === ZPLUNK_CCMS_A Table Attributes ===
 || *Attribute or Path* || *Setting* ||
-|| &#187; || ||
+|| `&#187;` || ||
 
 === ZPLUNK_CCMS_A Table Fields ===
 || *Field* || *Key* || *Data Element* ||
