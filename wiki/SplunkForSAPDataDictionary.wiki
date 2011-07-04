@@ -25,7 +25,20 @@
 || MSG || || XMIEXTMSG ||
 || SEVERITY || || FLAG ||
 || SENT || || FLAG ||
+
 == ZPLUNK_CCMS_C ==
+=== ZPLUNK_CCMS_C Table Attributes ===
+|| *Attribute or Path* || *Setting* ||
+|| `Table_Name` || ZPLUNK_CCMS_C ||
+|| Short Description || Splunk Collector: CCMS Current Status ||
+|| Attributes => Package || ZPLUNK ||
+|| Delivery and Maintenance => Delivery Class || L ||
+|| Delivery and Maintenance => Data Browser/Table View Maint. || Display/Maintenance Allowed ||
+|| Technical Settings => Data Class || SPROT ||
+|| Technical Settings => Size Category || 5 ||
+|| Technical Settings => Buffering || Buffering not allowed ||
+|| Menu => Extras => Enhancement Category || Cannot be enhanced ||
+
 === ZPLUNK_CCMS_C Table Fields ===
 || *Field* || *Key* || *Data Element* ||
 || SAMPLEDATE || X || AS4DATE ||
