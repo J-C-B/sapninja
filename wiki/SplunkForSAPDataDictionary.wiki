@@ -3,6 +3,14 @@
 = TABLES =
 == ZPLUNK_CCMS_A ==
 === Table Attributes ===
-|| *Field* || *Key* || *Data Element* ||
-||SAMPLEDATE||X||AS4DATE||
 === Table Fields ===
+|| *Field* || *Key* || *Data Element* ||
+|| SAMPLEDATE || X || AS4DATE ||
+|| SAMPLETIME || X || AS4TIME ||
+|| HOST || X || PFEHOSTNAM ||
+|| SYSNAME || X	|| PFEHOSTNAM ||
+|| SYSNR || X || PFESYSNR ||
+|| MTECLASS || X || TXT120 ||
+|| MSG || || XMIEXTMSG ||
+|| SEVERITY || || FLAG ||
+|| SENT || || FLAG ||
