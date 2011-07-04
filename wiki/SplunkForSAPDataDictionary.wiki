@@ -2,8 +2,11 @@
 
 = TABLES =
 == ZPLUNK_CCMS_A ==
-=== Table Attributes ===
-=== Table Fields ===
+=== ZPLUNK_CCMS_A Table Attributes ===
+|| *Attribute or Path* || *Setting* ||
+|| &#187; || ||
+
+=== ZPLUNK_CCMS_A Table Fields ===
 || *Field* || *Key* || *Data Element* ||
 || SAMPLEDATE || X || AS4DATE ||
 || SAMPLETIME || X || AS4TIME ||
