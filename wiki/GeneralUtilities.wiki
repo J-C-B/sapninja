@@ -4,4 +4,4 @@ This is a general index of utilities that may be useful for SAP systems.
 
 = Utilities =
 
-  * Report ZDELETE_SYSMSG_HISTORY to delete the history of whether users have read an SM02 message.  This means the system message will pop up each time  a user logs on, regardless of whether they have seen it before or not.  Handy for reminding users they are on production, etc.
+  * Report [http://code.google.com/p/sapninja/source/browse/trunk/tools/programs/zdelete_sysmsg_history.txt ZDELETE_SYSMSG_HISTORY] to delete the history of whether users have read an SM02 message.  This means the system message will pop up each time  a user logs on, regardless of whether they have seen it before or not.  Handy for reminding users they are on production, etc.
