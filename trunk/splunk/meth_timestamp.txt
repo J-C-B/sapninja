@@ -1,0 +1,32 @@
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+METHOD TIMESTAMP.
+   TYPES: BEGIN OF T_PARAMS,
+             PARAM TYPE ZPLUNK_TXT255,
+             VALUE TYPE ZPLUNK_TXT255,
+          END OF T_PARAMS.
+   DATA: IT_PARAMS TYPE STANDARD TABLE OF T_PARAMS INITIAL SIZE 0.
+
+   RESULT = ''.
+   SELECT PARAM VALUE FROM ZPLUNK_PARAMS
+   INTO TABLE IT_PARAMS WHERE PARAM = 'DATE_FORMAT' AND VALUE = 'DDMMYYYY'.
+   IF SY-SUBRC = 0.
+      CONCATENATE RAWDATE+6(2) RAWDATE+4(2) RAWDATE+0(4) INTO RESULT SEPARATED BY '/'.
+   ELSE.
+      CONCATENATE RAWDATE+4(2) RAWDATE+6(2) RAWDATE+0(4) INTO RESULT SEPARATED BY '/'.
+   ENDIF.
+   CONCATENATE RESULT RAWTIME+0(2) INTO RESULT SEPARATED BY SPACE.
+   CONCATENATE RESULT RAWTIME+2(2) RAWTIME+4(2) INTO RESULT SEPARATED BY ':'.
+ENDMETHOD.

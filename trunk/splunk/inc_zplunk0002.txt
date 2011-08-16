@@ -1,0 +1,71 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZPLUNK0002 - Time Functions
+*&---------------------------------------------------------------------*
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+FORM REWIND_TIME_SECS USING SS CHANGING DD TT.
+  DO SS TIMES.
+    IF TT = '000000'.
+      DD = DD - 1.
+    ENDIF.
+    TT = TT - 1.
+  ENDDO.
+ENDFORM.                    "REWIND_TIME_SECS
+
+*&---------------------------------------------------------------------*
+*&      Form  REWIND_TIME_TO_WHOLE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->STOPAT     text
+*      -->DD         text
+*      -->TT         text
+*----------------------------------------------------------------------*
+FORM REWIND_TIME_TO_WHOLE USING STOPAT CHANGING DD TT.
+  WHILE 1 = 1.
+    IF TT = '000000'.
+      DD = DD - 1.
+    ENDIF.
+    TT = TT - 1.
+    CASE STOPAT.
+      WHEN 1.
+        IF TT+4(2) = '00'.
+          EXIT.
+        ENDIF.
+      WHEN 5.
+        IF TT+3(3) = '500' OR TT+3(3) = '000'.
+          EXIT.
+        ENDIF.
+      WHEN 10.
+        IF TT+3(3) = '000'.
+          EXIT.
+        ENDIF.
+      WHEN 15.
+        IF TT+2(4) = '0000' OR TT+2(4) = '1500' OR TT+2(4) = '3000' OR TT+2(4) = '4500'.
+          EXIT.
+        ENDIF.
+      WHEN 30.
+        IF TT+2(4) = '0000' OR TT+2(4) = '3000'.
+          EXIT.
+        ENDIF.
+      WHEN 60.
+        IF TT+2(4) = '0000'.
+          EXIT.
+        ENDIF.
+      WHEN OTHERS.
+        EXIT.
+    ENDCASE.
+  ENDWHILE.
+ENDFORM.                    "REWIND_TIME_TO_WHOLE

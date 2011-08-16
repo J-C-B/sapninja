@@ -1,0 +1,85 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZPLUNK0010 - Print Jobs
+*&---------------------------------------------------------------------*
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+FORM GETSPOOL USING P_DATEL P_TIMEL P_SYSNAME P_SYSNR P_DATEF P_TIMEF P_DATET P_TIMET.
+  TABLES: TSP03L, ZPLUNK_SPOOL.
+  TYPES: BEGIN OF T_SPOOL,
+    PJIDENT   LIKE TSP02-PJIDENT,
+    PJCLIENT  LIKE TSP02-PJCLIENT,
+    PJOWNER   LIKE TSP02-PJOWNER,
+    PJDEST    LIKE TSP03L-PADEST,
+    LNAME     LIKE TSP03L-LNAME,
+    RQAPPRULE LIKE TSP01-RQAPPRULE,
+    DSIZE     LIKE TST01-DSIZE,
+    DTYPE     LIKE TST01-DTYPE,
+    DCRETIME  LIKE TST01-DCRETIME,
+  END OF T_SPOOL.
+
+  DATA: L_SPOOL TYPE STANDARD TABLE OF T_SPOOL WITH HEADER LINE.
+  DATA: LT_SPOOL TYPE ZPLUNK_SPOOL.
+  DATA: Q_FROM TYPE RSTSCREDT.
+  DATA: Q_TO TYPE RSTSCREDT.
+
+  WRITE:/ 'Collecting ... Print Jobs'.
+
+  CONCATENATE P_DATEF P_TIMEF '00' INTO Q_FROM.
+  CONCATENATE P_DATET P_TIMET '00' INTO Q_TO.
+
+  SELECT TSP02~PJIDENT   TSP02~PJCLIENT TSP02~PJOWNER TSP02~PJDEST
+         TSP01~RQAPPRULE TST01~DSIZE    TST01~DTYPE   TST01~DCRETIME
+  INTO CORRESPONDING FIELDS OF TABLE L_SPOOL
+  FROM TSP01 INNER JOIN TSP02 ON TSP01~RQIDENT = TSP02~PJIDENT
+             INNER JOIN TST01 ON TSP01~RQO1NAME = TST01~DNAME AND
+                                 TSP02~PJCLIENT = TST01~DCLIENT
+  WHERE TSP02~PJSTATUS = 9 AND
+        TST01~DCRETIME BETWEEN Q_FROM AND Q_TO.
+
+  LOOP AT L_SPOOL.
+    L_SPOOL-LNAME = L_SPOOL-PJDEST.
+    SELECT *
+    FROM TSP03L
+    WHERE PADEST = L_SPOOL-PJDEST.
+      L_SPOOL-LNAME = TSP03L-LNAME.
+    ENDSELECT.
+    SELECT * FROM ZPLUNK_SPOOL
+    WHERE SAMPLEDATE = P_DATEL AND
+          SAMPLETIME = P_TIMEL AND
+          HOST = L_CI_HOST AND
+          SYSNAME = P_SYSNAME AND
+          SYSNR = P_SYSNR AND
+          SPOOLID = L_SPOOL-PJIDENT.
+    ENDSELECT.
+    IF SY-SUBRC NE 0.
+      CLEAR LT_SPOOL.
+      LT_SPOOL-SAMPLEDATE = L_SPOOL-DCRETIME+0(8).
+      LT_SPOOL-SAMPLETIME = L_SPOOL-DCRETIME+8(6).
+      LT_SPOOL-HOST = L_CI_HOST.
+      LT_SPOOL-SYSNAME = P_SYSNAME.
+      LT_SPOOL-SYSNR = P_SYSNR.
+      LT_SPOOL-SPOOLID = L_SPOOL-PJIDENT.
+      LT_SPOOL-MANDT = L_SPOOL-PJCLIENT.
+      LT_SPOOL-BNAME = L_SPOOL-PJOWNER.
+      LT_SPOOL-PADEST = L_SPOOL-PJDEST.
+      LT_SPOOL-LNAME = L_SPOOL-LNAME.
+      LT_SPOOL-PAGESPRINTED = L_SPOOL-RQAPPRULE.
+      LT_SPOOL-BYTESOUT = L_SPOOL-DSIZE.
+      LT_SPOOL-OUTPUTTYPE = L_SPOOL-DTYPE.
+      INSERT INTO ZPLUNK_SPOOL VALUES LT_SPOOL.
+    ENDIF.
+  ENDLOOP.
+  COMMIT WORK.
+ENDFORM.                    "GETSPOOL

@@ -1,0 +1,174 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZPLUNK0005 - ST03N Write
+*&---------------------------------------------------------------------*
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+FORM WRITE_ZPLUNK_ST03N USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
+  TABLES: ZPLUNK_ST03N.
+  DATA: LT_ST03N TYPE ZPLUNK_ST03N.
+
+  WRITE:/ 'Collecting ... ST03 Workload Overview'.
+  LOOP AT L_TASKTYPE.
+    CLEAR LT_ST03N.
+    LT_ST03N-SAMPLEDATE = P_DATEL.                        " Log date
+    LT_ST03N-SAMPLETIME = P_TIMEL.                        " Log time
+    LT_ST03N-HOST = P_HOST.                               " This instance host name
+    LT_ST03N-SYSNAME = P_SYSNAME.                         " This instance SID
+    LT_ST03N-SYSNR = P_SYSNR.                             " This instance system number
+    LT_ST03N-TASKTYPE = CL_SWNC_CONSTANTS=>TRANSLATE_TASKTYPE( L_TASKTYPE-TASKTYPE ).                                 " Task type
+    LT_ST03N-STEPS = L_TASKTYPE-COUNT.                    " Number of Dialog Steps
+    LT_ST03N-RESPTI = L_TASKTYPE-RESPTI.                  " Total response time
+    LT_ST03N-PROCTI = L_TASKTYPE-PROCTI.                  " Total processing time
+    LT_ST03N-CPUTI = L_TASKTYPE-CPUTI.                    " Total CPU time
+    LT_ST03N-DBTI = L_TASKTYPE-DBTI.                      " Total DB time
+    LT_ST03N-QUEUETI = L_TASKTYPE-QUEUETI.                " Total Wait time
+    LT_ST03N-LOADGENTI = L_TASKTYPE-LOADGENTI.            " Total Load and Generation Time (ms)
+    LT_ST03N-LOCKTI = L_TASKTYPE-LOCKTI.                  " Total Lock Time for dialog steps
+    LT_ST03N-CPICTI = L_TASKTYPE-CPICTI.                  " RFC Interface Time (ms)
+    LT_ST03N-GUINETTIME = L_TASKTYPE-GUINETTIME.          " Average Frontend Network Time (ms)
+    LT_ST03N-GUITIME = L_TASKTYPE-GUITIME.                " GUI Time per Dialog Step (ms)
+    LT_ST03N-GUICNT = L_TASKTYPE-GUICNT.                  " Number of Roundtrips
+    LT_ST03N-BYTES = L_TASKTYPE-BYTES.                    " Requested Data
+    LT_ST03N-ROLLINSTEP = L_TASKTYPE-ROLLINSTEP.          " Number of Roll In Operations
+    LT_ST03N-ROLLINTI = L_TASKTYPE-ROLLINTI.              " Roll-in time
+    LT_ST03N-ROLLOUTTI = L_TASKTYPE-ROLLOUTTI.            " Roll-Out Time (ms)
+    LT_ST03N-ROLLOUTCNT = L_TASKTYPE-ROLLOUTCNT.          " Number of Roll-Out Operations
+    LT_ST03N-ROLLWAITTI = L_TASKTYPE-ROLLWAITTI.          " Total Roll Wait Time (ms)
+    LT_ST03N-ROLLSTEP = L_TASKTYPE-ROLLSTEP.              " Total Roll Steps
+    LT_ST03N-VMC_CALL_COUNT = L_TASKTYPE-VMC_CALL_COUNT.  " Number of VMC Calls
+    LT_ST03N-VMC_CPU_TIME = L_TASKTYPE-VMC_CPU_TIME.      " Total VMC CPU Time (s)
+    LT_ST03N-VMC_ELAP_TIME = L_TASKTYPE-VMC_ELAP_TIME.    " Total VMC Elapsed Time (s)
+    LT_ST03N-PHYREADCNT = L_TASKTYPE-PHYREADCNT.          " No. of Physical Database Read Accesses
+    LT_ST03N-CHNGCNT = L_TASKTYPE-CHNGCNT.                " Number of Logical Database Changes
+    LT_ST03N-READDIRBUF = L_TASKTYPE-READDIRBUF.          " # Records Read from Single Record Buffer
+    LT_ST03N-PHYCHNGREC = L_TASKTYPE-PHYCHNGREC.          " Number of Modified Database Records
+    LT_ST03N-READSEQCNT = L_TASKTYPE-READSEQCNT.          " Number of Sequential Reads
+    SELECT * FROM ZPLUNK_ST03N
+    WHERE SAMPLEDATE = LT_ST03N-SAMPLEDATE AND
+          SAMPLETIME = LT_ST03N-SAMPLETIME AND
+          HOST = LT_ST03N-HOST AND
+          SYSNAME = LT_ST03N-SYSNAME AND
+          SYSNR = LT_ST03N-SYSNR AND
+          TASKTYPE = LT_ST03N-TASKTYPE.
+    ENDSELECT.
+    IF SY-SUBRC NE 0.
+      INSERT INTO ZPLUNK_ST03N VALUES LT_ST03N.
+    ENDIF.
+  ENDLOOP.
+  COMMIT WORK.
+ENDFORM.                    "WRITE_ZPLUNK_ST03N
+
+*&---------------------------------------------------------------------*
+*&      Form  WRITE_ZPLUNK_ST03N_FE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_DATEL    text
+*      -->P_TIMEL    text
+*      -->P_HOST     text
+*      -->P_SYSNAME  text
+*      -->P_SYSNR    text
+*----------------------------------------------------------------------*
+FORM WRITE_ZPLUNK_ST03N_FE USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
+  TABLES: ZPLUNK_ST03N_FE.
+  DATA: LT_ST03N_FE TYPE ZPLUNK_ST03N_FE.
+
+  WRITE:/ 'Collecting ... ST03 Frontends'.
+  LOOP AT L_FRONTEND.
+    CLEAR LT_ST03N_FE.
+    LT_ST03N_FE-SAMPLEDATE = P_DATEL.                       " Log date
+    LT_ST03N_FE-SAMPLETIME = P_TIMEL.                       " Log time
+    LT_ST03N_FE-HOST = P_HOST.                              " This instance host name
+    LT_ST03N_FE-SYSNAME = P_SYSNAME.                        " This instance SID
+    LT_ST03N_FE-SYSNR = P_SYSNR.                            " This instance system number
+    LT_ST03N_FE-PHOST = L_FRONTEND-PHOST.              " Frontend Name
+    LT_ST03N_FE-STEPS = L_FRONTEND-COUNT.
+               " Number of dialog steps
+LT_ST03N_FE-BYTESIN = L_FRONTEND-BYTESIN.
+               " Bytes from frontend to application server
+LT_ST03N_FE-BYTESOUT = L_FRONTEND-BYTESOUT.
+             " Bytes from application server to frontend
+LT_ST03N_FE-GUITIME = L_FRONTEND-GUITIME.
+               " Total GUI Time per Dialog Step (ms)
+LT_ST03N_FE-GUICNT = L_FRONTEND-GUICNT.
+               " Number of Roundtrips
+LT_ST03N_FE-GUINETTIME = L_FRONTEND-GUINETTIME.
+             " Total Frontend Network Time (ms)
+
+SELECT * FROM ZPLUNK_ST03N_FE
+WHERE SAMPLEDATE = LT_ST03N_FE-SAMPLEDATE AND
+SAMPLETIME = LT_ST03N_FE-SAMPLETIME AND
+HOST = LT_ST03N_FE-HOST AND
+SYSNAME = LT_ST03N_FE-SYSNAME AND
+SYSNR = LT_ST03N_FE-SYSNR AND
+      PHOST = LT_ST03N_FE-PHOST.
+  ENDSELECT.
+  IF SY-SUBRC NE 0.
+    INSERT INTO ZPLUNK_ST03N_FE VALUES LT_ST03N_FE.
+  ENDIF.
+ENDLOOP.
+COMMIT WORK.
+ENDFORM.                    " WRITE_ZPLUNK_ST03N_FE
+
+FORM WRITE_ZPLUNK_ST03N_TRN USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
+  TABLES: ZPLUNK_ST03N_TRN.
+  DATA: LT_ST03N_TRN TYPE ZPLUNK_ST03N_TRN.
+
+  WRITE:/ 'Collecting ... ST03 User Transactions'.
+  LOOP AT L_USERTCODE.
+    CLEAR LT_ST03N_TRN.
+    LT_ST03N_TRN-SAMPLEDATE = P_DATEL.                        " Log date
+    LT_ST03N_TRN-SAMPLETIME = P_TIMEL.                        " Log time
+    LT_ST03N_TRN-HOST = P_HOST.                               " This instance host name
+    LT_ST03N_TRN-SYSNAME = P_SYSNAME.                         " This instance SID
+    LT_ST03N_TRN-SYSNR = P_SYSNR.                             " This instance system number
+    LT_ST03N_TRN-TASKTYPE = CL_SWNC_CONSTANTS=>TRANSLATE_TASKTYPE( L_USERTCODE-TASKTYPE ).                                 " Task type
+    LT_ST03N_TRN-BNAME = L_USERTCODE-ACCOUNT.                 " User ID
+    LT_ST03N_TRN-EXECUTED = L_USERTCODE-ENTRY_ID+0(72).       " Report or transaction name (last char R = report T=transaction)
+    CONDENSE LT_ST03N_TRN-EXECUTED.
+    SEARCH LT_ST03N_TRN-EXECUTED FOR ' '.
+
+    LT_ST03N_TRN-CALLTYPE = L_USERTCODE-ENTRY_ID+72(1).       " Report or transaction name (last char R = report T=transaction)
+    LT_ST03N_TRN-STEPS = L_USERTCODE-COUNT.                   " Number of Dialog Steps
+    LT_ST03N_TRN-RESPTI = L_USERTCODE-RESPTI.                 " Total response time
+    LT_ST03N_TRN-PROCTI = L_USERTCODE-PROCTI.                 " Total processing time
+    LT_ST03N_TRN-CPUTI = L_USERTCODE-CPUTI.                   " Total CPU time
+    LT_ST03N_TRN-QUEUETI = L_USERTCODE-QUEUETI.               " Total Wait time
+    LT_ST03N_TRN-ROLLWAITTI = L_USERTCODE-ROLLWAITTI.         " Total Roll Wait Time (ms)
+    LT_ST03N_TRN-GUITIME = L_USERTCODE-GUITIME.               " GUI Time per Dialog Step (ms)
+    LT_ST03N_TRN-GUICNT = L_USERTCODE-GUICNT.                 " Number of Roundtrips
+    LT_ST03N_TRN-GUINETTIME = L_USERTCODE-GUINETTIME.         " Average Frontend Network Time (ms)
+    LT_ST03N_TRN-READDIRTI = L_USERTCODE-READDIRTI.           " Database direct buffer read time (ms)
+    LT_ST03N_TRN-READSEQTI = L_USERTCODE-READSEQTI.           " Database sequential read time (ms)
+    LT_ST03N_TRN-CHNGTI = L_USERTCODE-CHNGTI.                 " Database update time (ms)
+    LT_ST03N_TRN-DBTI = L_USERTCODE-READDIRTI +               " Total database time (ms)
+                        L_USERTCODE-READSEQTI +
+                        L_USERTCODE-CHNGTI.
+    SELECT * FROM ZPLUNK_ST03N_TRN
+    WHERE SAMPLEDATE = LT_ST03N_TRN-SAMPLEDATE AND
+          SAMPLETIME = LT_ST03N_TRN-SAMPLETIME AND
+          HOST = LT_ST03N_TRN-HOST AND
+          SYSNAME = LT_ST03N_TRN-SYSNAME AND
+          SYSNR = LT_ST03N_TRN-SYSNR AND
+          TASKTYPE = LT_ST03N_TRN-TASKTYPE AND
+          BNAME = L_USERTCODE-ACCOUNT AND
+          EXECUTED = L_USERTCODE-ENTRY_ID.
+    ENDSELECT.
+    IF SY-SUBRC NE 0.
+      INSERT INTO ZPLUNK_ST03N_TRN VALUES LT_ST03N_TRN.
+    ENDIF.
+  ENDLOOP.
+  COMMIT WORK.
+ENDFORM.                    "WRITE_ZPLUNK_ST03N_TRN

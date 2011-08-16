@@ -1,0 +1,1772 @@
+FUNCTION ZPLUNK_GET .
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     VALUE(DATASET) TYPE  ZPLUNK_TXT255
+*"  EXPORTING
+*"     VALUE(RESULT) TYPE  STRINGTAB
+*"----------------------------------------------------------------------
+* ----------------------------------------------------------------------
+* Splunk data extractor function community version.  Extracts 
+* accumulated Splunk data via RFC
+* 
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+
+  DATA: L_SAMPLEDATE TYPE ZPLUNK_DATE,
+        L_SAMPLETIME TYPE ZPLUNK_TIME,
+        L_ZPLUNK_ST03N TYPE ZPLUNK_ST03N OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_SM04USR TYPE ZPLUNK_SM04USR OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_SM04MEM TYPE ZPLUNK_SM04MEM OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_SM21 TYPE ZPLUNK_SM21 OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_CCMS_A TYPE ZPLUNK_CCMS_A OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_CCMS_C TYPE ZPLUNK_CCMS_C OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_ST03N_FE TYPE ZPLUNK_ST03N_FE OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_ST03N_TRN TYPE ZPLUNK_ST03N_TRN OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_SM50 TYPE ZPLUNK_SM50 OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_SPOOL TYPE ZPLUNK_SPOOL OCCURS 0 WITH HEADER LINE,
+        L_LOGLINE(1000) TYPE C,
+        L_TOKEN TYPE ZPLUNK_TXT255,
+        L_VALUE TYPE ZPLUNK_TXT255,
+        L_NVALUE(20),
+        L_IDX TYPE I,
+        L_CAST(24) TYPE N,
+        L_LICOK TYPE INT_1,
+        L_LICMSG TYPE ZPLUNK_TXT255,
+        L_CHUNK1(100),
+        L_CHUNK2(100).
+
+* For legacy purposes only
+  IF DATASET = 'ZPLUNK_TASKTYPE'.
+     DATASET = 'ZPLUNK_ST03N_WORKLOAD'.
+  ENDIF.
+  CASE DATASET.
+    WHEN 'ZPLUNK_ST03N_WORKLOAD'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_ST03N
+      INTO L_ZPLUNK_ST03N
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_ST03N-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_ST03N-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_ST03N-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_ST03N-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_ST03N-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " TASKTYPE
+        L_VALUE = L_ZPLUNK_ST03N-TASKTYPE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'tasktype'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "STEPS
+        L_NVALUE = L_ZPLUNK_ST03N-STEPS.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'steps'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "RESPTI
+        L_NVALUE = L_ZPLUNK_ST03N-RESPTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'respti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "PROCTI
+        L_NVALUE = L_ZPLUNK_ST03N-PROCTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'procti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "CPUTI
+        L_NVALUE = L_ZPLUNK_ST03N-CPUTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'cputi'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "DBTI
+        L_NVALUE = L_ZPLUNK_ST03N-DBTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'dbti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "QUEUETI
+        L_NVALUE = L_ZPLUNK_ST03N-QUEUETI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'queueti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "LOADGENTI
+        L_NVALUE = L_ZPLUNK_ST03N-LOADGENTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'loadgenti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "LOCKTI
+        L_NVALUE = L_ZPLUNK_ST03N-LOCKTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'lockti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "CPICTI
+        L_NVALUE = L_ZPLUNK_ST03N-CPICTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'cpicti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "GUINETTIME
+        L_NVALUE = L_ZPLUNK_ST03N-GUINETTIME.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guinettime'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "GUITIME
+        L_NVALUE = L_ZPLUNK_ST03N-GUITIME.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guitime'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "GUICNT
+        L_NVALUE = L_ZPLUNK_ST03N-GUICNT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guicnt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "BYTES
+        L_NVALUE = L_ZPLUNK_ST03N-BYTES.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bytes'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "ROLLINSTEP
+        L_NVALUE = L_ZPLUNK_ST03N-ROLLINSTEP.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'rollinstep'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "ROLLINTI
+        L_NVALUE = L_ZPLUNK_ST03N-ROLLINTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'rollinti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "ROLLOUTTI
+        L_NVALUE = L_ZPLUNK_ST03N-ROLLOUTTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'rolloutti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "ROLLOUTCNT
+        L_NVALUE = L_ZPLUNK_ST03N-ROLLOUTCNT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'rolloutcnt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "ROLLWAITTI
+        L_NVALUE = L_ZPLUNK_ST03N-ROLLWAITTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'rollwaitti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "ROLLSTEP
+        L_NVALUE = L_ZPLUNK_ST03N-ROLLSTEP.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'rollstep'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "VMC_CALL_COUNT
+        L_NVALUE = L_ZPLUNK_ST03N-VMC_CALL_COUNT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'vmc_call_count'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "VMC_CPU_TIME
+        L_NVALUE = L_ZPLUNK_ST03N-VMC_CPU_TIME.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'vmc_cpu_time'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "VMC_ELAP_TIME
+        L_NVALUE = L_ZPLUNK_ST03N-VMC_ELAP_TIME.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'vmc_elap_time'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "PHYREADCNT
+        L_NVALUE = L_ZPLUNK_ST03N-PHYREADCNT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'phyreadcnt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        "CHNGCNT
+        L_NVALUE = L_ZPLUNK_ST03N-CHNGCNT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'chngcnt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "READDIRBUF
+        L_NVALUE = L_ZPLUNK_ST03N-READDIRBUF.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'readdirbuf'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "PHYCHNGREC
+        L_NVALUE = L_ZPLUNK_ST03N-PHYCHNGREC.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'phycngrec'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        "READSEQCNT
+        L_NVALUE = L_ZPLUNK_ST03N-READSEQCNT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'readseqcnt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_ST03N SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_ST03N-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_ST03N-SAMPLETIME AND
+              HOST = L_ZPLUNK_ST03N-HOST AND
+              SYSNAME = L_ZPLUNK_ST03N-SYSNAME AND
+              SYSNR = L_ZPLUNK_ST03N-SYSNR AND
+              TASKTYPE = L_ZPLUNK_ST03N-TASKTYPE.
+      ENDSELECT.
+    WHEN 'ZPLUNK_SM04USR'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_SM04USR
+      INTO L_ZPLUNK_SM04USR
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_SM04USR-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_SM04USR-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_SM04USR-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_SM04USR-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_SM04USR-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MANDT
+        L_VALUE = L_ZPLUNK_SM04USR-MANDT.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'mandt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " BNAME
+        L_VALUE = L_ZPLUNK_SM04USR-BNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " TCODE
+        L_VALUE = L_ZPLUNK_SM04USR-TCODE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'tcode'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " LASTACTION
+        CONCATENATE L_ZPLUNK_SM04USR-LASTACTION+0(2) L_ZPLUNK_SM04USR-LASTACTION+2(2) L_ZPLUNK_SM04USR-LASTACTION+4(2)
+        INTO L_VALUE SEPARATED BY ':'.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'lastaction'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " TERM
+        L_VALUE = L_ZPLUNK_SM04USR-TERM.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'term'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " USTYP
+        L_VALUE = L_ZPLUNK_SM04USR-USTYP.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'ustyp'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " IPADDR
+        L_VALUE = L_ZPLUNK_SM04USR-IPADDR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'ipaddr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_SM04USR SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_SM04USR-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_SM04USR-SAMPLETIME AND
+              HOST = L_ZPLUNK_SM04USR-HOST AND
+              SYSNAME = L_ZPLUNK_SM04USR-SYSNAME AND
+              SYSNR = L_ZPLUNK_SM04USR-SYSNR AND
+              IDX = L_ZPLUNK_SM04USR-IDX.
+      ENDSELECT.
+    WHEN 'ZPLUNK_SM04MEM'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_SM04MEM
+      INTO L_ZPLUNK_SM04MEM
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_SM04MEM-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_SM04MEM-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_SM04MEM-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_SM04MEM-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_SM04MEM-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MANDT
+        L_VALUE = L_ZPLUNK_SM04MEM-MANDT.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'mandt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " BNAME
+        L_VALUE = L_ZPLUNK_SM04MEM-BNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " TCODE
+        L_VALUE = L_ZPLUNK_SM04MEM-TCODE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'tcode'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " PAGEMEM
+        L_NVALUE = L_ZPLUNK_SM04MEM-PAGEMEM.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'pagemem'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " ROLLMEM
+        L_NVALUE = L_ZPLUNK_SM04MEM-ROLLMEM.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'rollmem'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " EXTENDEDMEM
+        L_NVALUE = L_ZPLUNK_SM04MEM-EXTENDEDMEM.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'extendedmem'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " PRIVMEM
+        L_NVALUE = L_ZPLUNK_SM04MEM-PRIVMEM.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'privmem'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_SM04MEM SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_SM04MEM-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_SM04MEM-SAMPLETIME AND
+              HOST = L_ZPLUNK_SM04MEM-HOST AND
+              SYSNAME = L_ZPLUNK_SM04MEM-SYSNAME AND
+              SYSNR = L_ZPLUNK_SM04MEM-SYSNR AND
+              IDX = L_ZPLUNK_SM04MEM-IDX.
+      ENDSELECT.
+    WHEN 'ZPLUNK_SM21'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_SM21
+      INTO L_ZPLUNK_SM21
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_SM21-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_SM21-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_SM21-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_SM21-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_SM21-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " WPTYPE
+        L_VALUE = L_ZPLUNK_SM21-WPTYPE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'wptype'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " WPNO
+        L_VALUE = L_ZPLUNK_SM21-WPNO.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'wpno'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MANDT
+        L_VALUE = L_ZPLUNK_SM21-MANDT.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'mandt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " BNAME
+        L_VALUE = L_ZPLUNK_SM21-BNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " TCODE
+        L_VALUE = L_ZPLUNK_SM21-TCODE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'tcode'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " REPNAME
+        L_VALUE = L_ZPLUNK_SM21-REPNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'repname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " TERM
+        L_VALUE = L_ZPLUNK_SM21-TERM.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'term'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " DEVCLASS
+        L_VALUE = L_ZPLUNK_SM21-DEVCLASS.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'devclass'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " AREA
+        L_NVALUE = L_ZPLUNK_SM21-AREA.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'area'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SUBID
+        L_VALUE = L_ZPLUNK_SM21-SUBID.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'subid'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " ERRMSG
+        CONCATENATE '"' L_ZPLUNK_SM21-ERRMSG '"' INTO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'errmsg'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_SM21 SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_SM21-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_SM21-SAMPLETIME AND
+              HOST = L_ZPLUNK_SM21-HOST AND
+              SYSNAME = L_ZPLUNK_SM21-SYSNAME AND
+              SYSNR = L_ZPLUNK_SM21-SYSNR AND
+              WPTYPE = L_ZPLUNK_SM21-WPTYPE AND
+              WPNO = L_ZPLUNK_SM21-WPNO AND
+              MANDT = L_ZPLUNK_SM21-MANDT AND
+              BNAME = L_ZPLUNK_SM21-BNAME.
+      ENDSELECT.
+    WHEN 'ZPLUNK_CCMS_A'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_CCMS_A
+      INTO L_ZPLUNK_CCMS_A
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_CCMS_A-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_CCMS_A-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_CCMS_A-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_CCMS_A-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_CCMS_A-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MTECLASS
+        L_VALUE = L_ZPLUNK_CCMS_A-MTECLASS.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'mteclass'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SEVERITY
+        L_VALUE = L_ZPLUNK_CCMS_A-SEVERITY.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'severity'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MSG
+        CONCATENATE '"' L_ZPLUNK_CCMS_A-MSG '"' INTO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'msg'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_CCMS_A SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_CCMS_A-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_CCMS_A-SAMPLETIME AND
+              HOST       = L_ZPLUNK_CCMS_A-HOST AND
+              SYSNAME    = L_ZPLUNK_CCMS_A-SYSNAME AND
+              SYSNR      = L_ZPLUNK_CCMS_A-SYSNR AND
+              MTECLASS   = L_ZPLUNK_CCMS_A-MTECLASS.
+      ENDSELECT.
+    WHEN 'ZPLUNK_CCMS_C'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_CCMS_C
+      INTO L_ZPLUNK_CCMS_C
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_CCMS_C-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_CCMS_C-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_CCMS_C-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_CCMS_C-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_CCMS_C-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MTECLASS
+        L_VALUE = L_ZPLUNK_CCMS_C-MTECLASS.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'mteclass'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SEVERITY
+        L_VALUE = L_ZPLUNK_CCMS_C-SEVERITY.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'severity'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MSG
+        CONCATENATE '"' L_ZPLUNK_CCMS_C-MSG '"' INTO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'msg'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " OBSERVATION
+        L_VALUE = L_ZPLUNK_CCMS_C-OBSERVATION.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'obs'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " OBSERVATION UOM
+        L_VALUE = L_ZPLUNK_CCMS_C-OBSERVATION_UOM.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'obs_uom'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_CCMS_C SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_CCMS_C-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_CCMS_C-SAMPLETIME AND
+              HOST       = L_ZPLUNK_CCMS_C-HOST AND
+              SYSNAME    = L_ZPLUNK_CCMS_C-SYSNAME AND
+              SYSNR      = L_ZPLUNK_CCMS_C-SYSNR AND
+              MTECLASS   = L_ZPLUNK_CCMS_C-MTECLASS.
+      ENDSELECT.
+    WHEN 'ZPLUNK_ST03N_USERTCODE'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_ST03N_TRN
+      INTO L_ZPLUNK_ST03N_TRN
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_ST03N_TRN-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_ST03N_TRN-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_ST03N_TRN-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_ST03N_TRN-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_ST03N_TRN-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Task type
+        L_VALUE = L_ZPLUNK_ST03N_TRN-TASKTYPE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'tasktype'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " User ID
+        L_VALUE = L_ZPLUNK_ST03N_TRN-BNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " What was executed ... a report or transaction
+        SPLIT L_ZPLUNK_ST03N_TRN-EXECUTED AT SPACE INTO L_CHUNK1 L_CHUNK2.
+* Remove special characters
+        REPLACE ALL OCCURRENCES OF '<' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF '>' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF '(' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF ')' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF '=' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF ';' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF '.' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF ',' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF '/' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF '[' IN L_CHUNK1 WITH SPACE.
+        REPLACE ALL OCCURRENCES OF ']' IN L_CHUNK1 WITH SPACE.
+        CONDENSE L_CHUNK1.
+        L_VALUE = L_CHUNK1.
+        IF L_ZPLUNK_ST03N_TRN-CALLTYPE = 'T'.
+          CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+            EXPORTING
+              KEY    = 'tcode'
+              VALUE  = L_VALUE
+            IMPORTING
+              RESULT = L_TOKEN.
+        ELSE.
+          CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+            EXPORTING
+              KEY    = 'repname'
+              VALUE  = L_VALUE
+            IMPORTING
+              RESULT = L_TOKEN.
+        ENDIF.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Whatever was executed, report it in a common field called PROGRAM
+* Remove special characters
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'program'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Number of Dialog Steps
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-STEPS.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'steps'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total response time
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-RESPTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'respti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total processing time
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-PROCTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'procti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total CPU time
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-CPUTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'cputi'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total DB time
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-DBTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'dbti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total DB Direct Read Time
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-READDIRTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'readdirti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total DB Sequential Read Time
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-READSEQTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'readseqti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total DB Update Time
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-CHNGTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'chngti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total Wait time
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-QUEUETI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'queueti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total Roll Wait Time (ms)
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-ROLLWAITTI.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'rollwaitti'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " GUI Time per Dialog Step (ms)
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-GUITIME.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guitime'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Number of Roundtrips
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-GUICNT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guicnt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Average Frontend Network Time (ms)
+        L_NVALUE = L_ZPLUNK_ST03N_TRN-GUINETTIME.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guinettime'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_ST03N_TRN SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_ST03N_TRN-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_ST03N_TRN-SAMPLETIME AND
+              HOST = L_ZPLUNK_ST03N_TRN-HOST AND
+              SYSNAME = L_ZPLUNK_ST03N_TRN-SYSNAME AND
+              SYSNR = L_ZPLUNK_ST03N_TRN-SYSNR AND
+              TASKTYPE = L_ZPLUNK_ST03N_TRN-TASKTYPE AND
+              BNAME = L_ZPLUNK_ST03N_TRN-BNAME AND
+              EXECUTED = L_ZPLUNK_ST03N_TRN-EXECUTED.
+      ENDSELECT.
+    WHEN 'ZPLUNK_ST03N_FRONTEND'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_ST03N_FE
+      INTO L_ZPLUNK_ST03N_FE
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_ST03N_FE-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_ST03N_FE-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_ST03N_FE-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_ST03N_FE-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_ST03N_FE-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Frontend Name
+        L_VALUE = L_ZPLUNK_ST03N_FE-PHOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'phost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Number of dialog steps
+        L_NVALUE = L_ZPLUNK_ST03N_FE-STEPS.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'steps'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Bytes from frontend to application server
+        L_NVALUE = L_ZPLUNK_ST03N_FE-BYTESIN.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bytesin'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Bytes from application server to frontend
+        L_NVALUE = L_ZPLUNK_ST03N_FE-BYTESOUT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bytesout'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total GUI Time per Dialog Step (ms)
+        L_NVALUE = L_ZPLUNK_ST03N_FE-GUITIME.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guitime'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Number of Roundtrips
+        L_NVALUE = L_ZPLUNK_ST03N_FE-GUICNT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guicnt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Total Frontend Network Time (ms)
+        L_NVALUE = L_ZPLUNK_ST03N_FE-GUINETTIME.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'guinettime'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_ST03N_FE SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_ST03N_FE-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_ST03N_FE-SAMPLETIME AND
+              HOST = L_ZPLUNK_ST03N_FE-HOST AND
+              SYSNAME = L_ZPLUNK_ST03N_FE-SYSNAME AND
+              SYSNR = L_ZPLUNK_ST03N_FE-SYSNR AND
+              PHOST = L_ZPLUNK_ST03N_FE-PHOST.
+      ENDSELECT.
+
+    WHEN 'ZPLUNK_SM50'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_SM50
+      INTO L_ZPLUNK_SM50
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_SM50-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_SM50-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_SM50-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_SM50-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_SM50-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process number
+        L_VALUE = L_ZPLUNK_SM50-WP_NO.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'wp_no'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process type
+        L_VALUE = L_ZPLUNK_SM50-WP_TYPE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'wp_type'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Process ID
+        L_VALUE = L_ZPLUNK_SM50-WP_PID.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'wp_pid'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process status
+        L_VALUE = L_ZPLUNK_SM50-WP_STATUS.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'wp_status'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process error dumps
+        L_VALUE = L_ZPLUNK_SM50-WP_DUMPS.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'wp_dumps'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process client
+        L_VALUE = L_ZPLUNK_SM50-WP_MANDT.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'mandt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process user id
+        L_VALUE = L_ZPLUNK_SM50-WP_BNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process report name
+        L_VALUE = L_ZPLUNK_SM50-WP_REPORT.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'repname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process current execution elapsed time
+        L_VALUE = L_ZPLUNK_SM50-WP_ELTIME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'eltime'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process action
+        CONCATENATE '"' L_ZPLUNK_SM50-WP_ACTION '"' INTO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'wp_action'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " Work process table
+        L_VALUE = L_ZPLUNK_SM50-WP_TABLE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'table'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_SM50 SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_SM50-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_SM50-SAMPLETIME AND
+              HOST = L_ZPLUNK_SM50-HOST AND
+              SYSNAME = L_ZPLUNK_SM50-SYSNAME AND
+              SYSNR = L_ZPLUNK_SM50-SYSNR AND
+              WP_NO = L_ZPLUNK_SM50-WP_NO.
+      ENDSELECT.
+    WHEN 'ZPLUNK_SPOOL'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_SPOOL
+      INTO L_ZPLUNK_SPOOL
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_SPOOL-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_SPOOL-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_SPOOL-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_SPOOL-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_SPOOL-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SPOOL ID
+        L_NVALUE = L_ZPLUNK_SPOOL-SPOOLID.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'spoolid'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MANDT
+        L_VALUE = L_ZPLUNK_SPOOL-MANDT.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'mandt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " BNAME
+        L_VALUE = L_ZPLUNK_SPOOL-BNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " PADEST
+        L_VALUE = L_ZPLUNK_SPOOL-PADEST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'prnshortname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " LNAME
+        L_VALUE = L_ZPLUNK_SPOOL-LNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'printer'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " PAGES PRINTED
+        L_NVALUE = L_ZPLUNK_SPOOL-PAGESPRINTED.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'prnpages'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " BYTES PRINTED
+        L_NVALUE = L_ZPLUNK_SPOOL-BYTESOUT.
+        CALL FUNCTION 'ZFORMAT_SIGN'
+          CHANGING
+            VALUE = L_NVALUE.
+        MOVE L_NVALUE TO L_VALUE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'prnbytes'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " OUTPUTTYPE
+        L_VALUE = L_ZPLUNK_SPOOL-OUTPUTTYPE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'prntype'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_SPOOL SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_SPOOL-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_SPOOL-SAMPLETIME AND
+              HOST = L_ZPLUNK_SPOOL-HOST AND
+              SYSNAME = L_ZPLUNK_SPOOL-SYSNAME AND
+              SYSNR = L_ZPLUNK_SPOOL-SYSNR AND
+              SPOOLID = L_ZPLUNK_SPOOL-SPOOLID.
+      ENDSELECT.
+  ENDCASE.
+  COMMIT WORK.
+ENDFUNCTION.

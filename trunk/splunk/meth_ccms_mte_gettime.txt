@@ -1,0 +1,30 @@
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+METHOD CCMS_MTE_GETTIME.
+  DATA: L_PARAM TYPE ZPLUNK_PARAMS.
+  DATA: L_KEY TYPE ZPLUNK_TXT255.
+
+  CONCATENATE 'MTE' '_' SY-HOST '_' MTE INTO L_KEY.
+  SELECT SINGLE *
+  INTO L_PARAM
+  FROM ZPLUNK_PARAMS
+  WHERE PARAM = L_KEY.
+  IF SY-SUBRC EQ 0.
+    RESULT = L_PARAM-VALUE.
+  ELSE.
+    RESULT = '00000000000000'.
+  ENDIF.
+  COMMIT WORK.
+ENDMETHOD.

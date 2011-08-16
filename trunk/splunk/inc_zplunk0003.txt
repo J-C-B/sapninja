@@ -1,0 +1,126 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZPLUNK0003 - SM04 User List
+*&---------------------------------------------------------------------*
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+FORM SM04_USER USING P_HOST P_SYSNAME P_SYSNR.
+  TABLES USR02.
+  DATA: LT_SM04USR TYPE ZPLUNK_SM04USR.
+  DATA: BEGIN OF USR_TABL OCCURS 10.
+          INCLUDE STRUCTURE UINFO.
+  DATA: END OF USR_TABL.
+  DATA: IPX1 TYPE X,
+        IPX2 TYPE X,
+        IPX3 TYPE X,
+        IPX4 TYPE X,
+        IPI1(3) TYPE N,
+        IPI2(3) TYPE N,
+        IPI3(3) TYPE N,
+        IPI4(3) TYPE N,
+        IDX TYPE I,
+        L_HOSTNAME TYPE SXPGCOLIST-PARAMETERS,
+        L_IPADDRESS TYPE ZPLUNK_TXT255.
+
+  WRITE:/ 'Collecting ... SM04 User List'.
+  REFRESH USR_TABL.
+  CALL 'ThUsrInfo' ID 'OPCODE' FIELD OPCODE_LIST
+                   ID 'TAB' FIELD USR_TABL-*SYS*.
+  IDX = 0.
+  LOOP AT USR_TABL.
+    IDX = IDX + 1.
+    CLEAR LT_SM04USR.
+    LT_SM04USR-SAMPLEDATE = SY-DATUM.                        " Log date
+    LT_SM04USR-SAMPLETIME = SY-UZEIT.                        " Log time
+    LT_SM04USR-HOST = P_HOST.                                " This instance host name
+    LT_SM04USR-SYSNAME = P_SYSNAME.                          " This instance SID
+    LT_SM04USR-SYSNR = P_SYSNR.                              " This instance system number
+    LT_SM04USR-IDX = IDX.                                    " Index
+    LT_SM04USR-MANDT = USR_TABL-MANDT.                       " Client
+    CONDENSE LT_SM04USR-MANDT.
+    LT_SM04USR-BNAME = USR_TABL-BNAME.                       " User Name
+    SELECT * FROM USR02 CLIENT SPECIFIED WHERE BNAME = USR_TABL-BNAME AND MANDT = USR_TABL-MANDT.
+      LT_SM04USR-USTYP = USR02-USTYP.
+    ENDSELECT.
+    IF SY-SUBRC EQ 0.
+      IF LT_SM04USR-USTYP = 'A'.
+        LT_SM04USR-USTYP = 'Dialog'.
+      ELSEIF LT_SM04USR-USTYP EQ 'B'.
+        LT_SM04USR-USTYP = 'System'.
+      ELSEIF LT_SM04USR-USTYP EQ 'C'.
+        LT_SM04USR-USTYP = 'Communications'.
+      ELSEIF LT_SM04USR-USTYP EQ 'L'.
+        LT_SM04USR-USTYP = 'Reference'.
+      ELSEIF LT_SM04USR-USTYP EQ 'S'.
+        LT_SM04USR-USTYP = 'Service'.
+      ELSE.
+        LT_SM04USR-USTYP = ''.
+      ENDIF.
+    ELSE.
+      LT_SM04USR-USTYP = ''.
+    ENDIF.
+    LT_SM04USR-TCODE = USR_TABL-TCODE.                       " Tranaction Code
+    LT_SM04USR-LASTACTION = USR_TABL-ZEIT.                   " Last action time
+    LT_SM04USR-TERM = USR_TABL-TERM.                         " Terminal
+    LT_SM04USR-IPADDR = USR_TABL-HOSTADR.                    " IP Address
+
+* Sometimes the value of TERM is already an IP address.  Check this out first.
+    FIND REGEX '\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b' IN LT_SM04USR-TERM.
+    IF SY-SUBRC EQ 0.
+       LT_SM04USR-IPADDR = LT_SM04USR-TERM.
+    ELSE.
+* Otherwise, lookup the IP address from the terminal hostname
+       IPX1 = LT_SM04USR-IPADDR+0(2).
+       IPI1 = IPX1.
+       SHIFT IPI1 LEFT DELETING LEADING '0'.
+       IF IPI1 EQ ''.
+         IPI1 = '0'.
+       ENDIF.
+       IPX2 = LT_SM04USR-IPADDR+2(2).
+       IPI2 = IPX2.
+       SHIFT IPI2 LEFT DELETING LEADING '0'.
+       IF IPI2 EQ ''.
+         IPI2 = '0'.
+       ENDIF.
+       IPX3 = LT_SM04USR-IPADDR+4(2).
+       IPI3 = IPX3.
+       SHIFT IPI3 LEFT DELETING LEADING '0'.
+       IF IPI3 EQ ''.
+         IPI3 = '0'.
+       ENDIF.
+       IPX4 = LT_SM04USR-IPADDR+6(2).
+       IPI4 = IPX4.
+       SHIFT IPI4 LEFT DELETING LEADING '0'.
+       IF IPI4 EQ ''.
+         IPI4 = '0'.
+       ENDIF.
+       CONCATENATE IPI1 IPI2 IPI3 IPI4 INTO LT_SM04USR-IPADDR SEPARATED BY '.'.
+       IF LT_SM04USR-IPADDR = '000.000.000.000'.
+         L_HOSTNAME = LT_SM04USR-TERM.
+         CALL FUNCTION 'ZPLUNK_NSLOOKUP'
+           EXPORTING
+             HOSTNAME  = L_HOSTNAME
+           IMPORTING
+             IPADDRESS = L_IPADDRESS.
+         LT_SM04USR-IPADDR = L_IPADDRESS.
+       ENDIF.
+    ENDIF.
+
+* Only record real users (not the bogus ones that sometimes show in client 000)
+    IF STRLEN( LT_SM04USR-MANDT ) > 1.
+      INSERT INTO ZPLUNK_SM04USR VALUES LT_SM04USR.
+    ENDIF.
+  ENDLOOP.
+  COMMIT WORK.
+ENDFORM.                                                    "SM04_USER
