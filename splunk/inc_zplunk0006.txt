@@ -1,0 +1,61 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZPLUNK0006 - ST03N COLLECT
+*&---------------------------------------------------------------------*
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+FORM CALL_SWNC_READ_SNAPSHOT USING P_TIMZ P_DATEF P_TIMEF P_DATET P_TIMET.
+  CALL FUNCTION 'SWNC_READ_SNAPSHOT'
+    EXPORTING
+      READ_TIMEZONE    = P_TIMZ
+      READ_START_DATE  = P_DATEF
+      READ_START_TIME  = P_TIMEF
+      READ_END_DATE    = P_DATET
+      READ_END_TIME    = P_TIMET
+    TABLES
+      TASKTYPE         = L_TASKTYPE
+      TASKTIMES        = L_TASKTIMES
+      TIMES            = L_TIMES
+      DBPROCS          = L_DBPROCS
+      EXTSYSTEM        = L_EXTSYSTEM
+      TCDET            = L_TCDET
+      FRONTEND         = L_FRONTEND
+      MEMORY           = L_MEMORY
+      SPOOL            = L_SPOOL
+      SPOOLACT         = L_SPOOLACT
+      TABLEREC         = L_TABLEREC
+      USERTCODE        = L_USERTCODE
+      USERWORKLOAD     = L_USERWORKLOAD
+      RFCCLNT          = L_RFCCLNT
+      RFCCLNTDEST      = L_RFCCLNTDEST
+      RFCSRVR          = L_RFCSRVR
+      RFCSRVRDEST      = L_RFCSRVRDEST
+      HITLIST_DATABASE = L_HITLIST_DATABASE
+      HITLIST_RESPTIME = L_HITLIST_RESPTIME
+      ASTAT            = L_ASTAT
+      ASHITL_DATABASE  = L_ASHITL_DATABASE
+      ASHITL_RESPTIME  = L_ASHITL_RESPTIME
+      COMP_HIERARCHY   = L_COMP_HIERARCHY
+      ORG_UNITS        = L_ORG_UNITS
+      DBCON            = L_DBCON
+      VMC              = L_VMC
+      WEBSD            = L_WEBSD
+      WEBCD            = L_WEBCD
+      WEBS             = L_WEBS
+      WEBC             = L_WEBC
+    EXCEPTIONS
+      READ_ERROR       = 1
+      NO_DATA          = 2.
+
+ENDFORM.                    "CALL_SWNC_READ_SNAPSHOT

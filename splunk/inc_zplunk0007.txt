@@ -1,0 +1,130 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZPLUNK0007 - SM21 System Log
+*&---------------------------------------------------------------------*
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+FORM ZPLUNK_SM21_700.
+  DATA: CPU_ID(8),
+        DY_START_FILE_N6(6)  TYPE N,
+        DY_START_POS_N10(10) TYPE N,
+        DY_STOP_FILE_N6(6)   TYPE N,
+        DY_STOP_POS_N10(10)  TYPE N,
+        PAGES LIKE RSLGLAYOUT-MAXPAG,
+        IGNORE_IDS_CNT TYPE I.
+
+  PERFORM SET_SURPRESS_POPUPS(ZPLUNKSAPMSM21_700).
+  PERFORM INIT_ME(ZPLUNKSAPMSM21_700) USING CPU_ID.
+
+  CALL FUNCTION 'RSLG_SEL_ST_WHICHLOG_ALV'
+    EXPORTING
+      FILE = 'L'. "REP_ON_LOCAL.
+  PERFORM INIT_INTERN_TAB_ALV(ZPLUNKSAPMSM21_700).
+  CALL FUNCTION 'RSLG_LAYOUT_ST_COL_TABE_ALV'
+    EXPORTING
+      WITH_COLUMN = 'X'.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_COL_DEVC_ALV'
+    EXPORTING
+      WITH_COLUMN = 'X'.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_COL_POSI_ALV'
+    EXPORTING
+      WITH_COLUMN = ' '.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_COL_MAND_ALV'
+    EXPORTING
+      WITH_COLUMN = 'X'.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_COL_DATE_ALV'
+    EXPORTING
+      WITH_COLUMN = ' '.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_COL_PROG_ALV'
+    EXPORTING
+      WITH_COLUMN = 'X'.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_COL_TERM_ALV'
+    EXPORTING
+      WITH_COLUMN = ' '.
+  CALL FUNCTION 'RSLG_SEL_ST_PARAREC_ALV'
+    EXPORTING
+      WITH_LINE = ' '.
+
+  CALL FUNCTION 'RSLG_SEL_ST_TIMES_ALV'
+    EXPORTING
+      SDATE = L_DATEF
+      STIME = L_TIMEF
+      EDATE = L_DATET
+      ETIME = L_TIMET.
+
+  CALL FUNCTION 'RSLG_SEL_ST_TASK_TYPNUM_ALV'
+    EXPORTING
+      TYP = ' '
+      NUM = ' '.
+
+  CALL FUNCTION 'RSLG_SEL_ST_USER_ALV'
+    EXPORTING
+      USER = ' '.
+  CALL FUNCTION 'RSLG_SEL_ST_TCODE_ALV'
+    EXPORTING
+      TCODE = ' '.
+  CALL FUNCTION 'RSLG_SEL_ST_REPNA_ALV'
+    EXPORTING
+      REPNA = ' '.
+  PAGES = 80.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_PAGES_ALV'
+    EXPORTING
+      PAGES = 80.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_STATS_ALV'
+    EXPORTING
+      WITH_STATISTICS = ' '.
+  CALL FUNCTION 'RSLG_LAYOUT_ST_SORT_ALV'
+    EXPORTING
+      ORDER = 'SOFI'.
+  DY_START_FILE_N6 = 0.
+  DY_START_POS_N10 = 0.
+  DY_STOP_FILE_N6  = 0.
+  DY_STOP_POS_N10  = 0.
+
+  CALL FUNCTION 'RSLG_SEL_ST_POSI_ALV'
+    EXPORTING
+      SFILE_NO = DY_START_FILE_N6
+      SPOS     = DY_START_POS_N10
+      EFILE_NO = DY_STOP_FILE_N6
+      EPOS     = DY_STOP_POS_N10.
+
+  CALL FUNCTION 'RSLG_SEL_ST_LOGT_ALV'
+    EXPORTING
+      ENTRYTYPE = ' '.
+  CALL FUNCTION 'RSLG_SEL_ST_TERM_ALV'
+    EXPORTING
+      TERMINAL = ' '.
+  CALL FUNCTION 'RSLG_SEL_ST_DEVCLASS_ALV'
+    EXPORTING
+      DEVCLASS = ' '.
+  CALL FUNCTION 'RSLG_SEL_ST_CLASIDS_ALV'
+    EXPORTING
+      CID1 = ' '
+      CID2 = ' '
+      CID3 = ' '
+      CID4 = ' '
+      CID5 = ' '
+      CID6 = ' '.
+  CALL FUNCTION 'RSLG_SEL_ST_INTERNRECS_ALV'
+    EXPORTING
+      WITH_LINE = ' '.
+
+  WRITE:/ 'Collecting ... SM21 System Log'.
+  PERFORM PREPARE_A_LIST(ZPLUNKSAPMSM21_700).
+  PERFORM WRITE_DYNPRO_ALV(ZPLUNKSAPMSM21_700).
+  PERFORM READ_SYSLOG_ALV(ZPLUNKSAPMSM21_700).
+  PERFORM WRITE_LIST_ABOUT_SYSLOG_ALV(ZPLUNKSAPMSM21_700).
+  PERFORM ZPLUNK_CAPTURE(ZPLUNKSAPMSM21_700) USING L_HOST L_SYSNAME L_SYSNR.
+  COMMIT WORK.
+ENDFORM.                    "ZPLUNK_SM21

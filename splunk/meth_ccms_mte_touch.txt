@@ -1,0 +1,34 @@
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+METHOD CCMS_MTE_TOUCH.
+  DATA: L_PARAM TYPE ZPLUNK_PARAMS.
+
+* Wipe out any MTE timestamps that are more than a day old
+  CONCATENATE SY-DATUM '000000' INTO L_PARAM-VALUE.
+  DELETE FROM ZPLUNK_PARAMS WHERE PARAM LIKE 'MTE%' AND VALUE < L_PARAM-VALUE.
+
+* Wipe out the current timestamp for this MTE
+  CONCATENATE 'MTE' '_' SY-HOST '_' MTE INTO L_PARAM-PARAM.
+  CONCATENATE SY-DATUM SY-UZEIT INTO L_PARAM-VALUE.
+  DELETE FROM ZPLUNK_PARAMS WHERE PARAM = L_PARAM-PARAM.
+
+  INSERT INTO ZPLUNK_PARAMS VALUES L_PARAM.
+  IF SY-SUBRC EQ 0.
+    RESULT = 'Y'.
+  ELSE.
+    RESULT = 'N'.
+  ENDIF.
+  COMMIT WORK.
+ENDMETHOD.

@@ -1,0 +1,457 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZPLUNK0008 - CCMS Alerts
+*&---------------------------------------------------------------------*
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+DATA: L_OUT_TID             LIKE ALGLOBTID OCCURS 0 WITH HEADER LINE,
+      L_OUT_TYPEDEF_RC      LIKE ALTDEFRC OCCURS 0 WITH HEADER LINE,
+      L_OUT_TYPEDEF_RC_ASYN LIKE ALTDEFRC OCCURS 0 WITH HEADER LINE,
+      L_OUT_TREEINFO        LIKE ALMTTRE40B OCCURS 0 WITH HEADER LINE,
+      L_TREE_TIDRC_TBL      LIKE ALGTIDRC OCCURS 0 WITH HEADER LINE,
+      L_TIDSMOOTHRC         LIKE ALGTIDSMO OCCURS 0 WITH HEADER LINE,
+      L_PERFTYPERC          LIKE ALPERFTYPE OCCURS 0 WITH HEADER LINE,
+      L_SMESTYPERC          LIKE ALSMSGTYPE OCCURS 0 WITH HEADER LINE,
+      L_MSC_SPECIFIC_RC     LIKE ALMSCTYPE OCCURS 0 WITH HEADER LINE,
+      L_MSC_FILTER          LIKE ALMSCTIDFL OCCURS 0 WITH HEADER LINE,
+      L_MSC_LINES           LIKE ALMSCTIDML OCCURS 0 WITH HEADER LINE,
+      L_TEXTATTRRC          LIKE ALTEXTATTR OCCURS 0 WITH HEADER LINE,
+      L_REFERENCES          LIKE ALTXTLNKAT OCCURS 0 WITH HEADER LINE,
+      L_TIDAID              LIKE ALGTIDGAID OCCURS 0 WITH HEADER LINE,
+      L_AID                 LIKE ALGLOBAID OCCURS 0 WITH HEADER LINE,
+      L_AIDRC               LIKE ALGAIDRC OCCURS 0 WITH HEADER LINE,
+      L_ALERTRC             LIKE ALALERTRC OCCURS 0 WITH HEADER LINE,
+      L_TIDAID_TIDRC_TBL    LIKE ALGTIDRC OCCURS 0 WITH HEADER LINE,
+      L_TOOL_EFFECTIVE_RC   LIKE ALTOOLEFRC OCCURS 0 WITH HEADER LINE,
+      L_ZPLUNK_CCMS_MTES    TYPE ZPLUNK_CCMS_MTES OCCURS 0 WITH HEADER LINE,
+      L_MTE_TID             LIKE ALALERTRC OCCURS 0 WITH HEADER LINE,
+      L_PR_TID              LIKE ALGLOBTID OCCURS 0 WITH HEADER LINE,
+      L_PR_RET              LIKE ALPERFTYPE OCCURS 0 WITH HEADER LINE,
+      L_TID                 TYPE ALTIDTBL,
+      L_TID_VISI_MAXLEVEL   TYPE ALTIDMLTBL,
+      L_ALERTS              TYPE ALALERTS,
+      L_ALAIDTBL            TYPE ALAIDTBL,
+      L_CCMS_A              TYPE ZPLUNK_CCMS_A,
+      L_CCMS_C              TYPE ZPLUNK_CCMS_C,
+      L_SECS                TYPE SYTABIX,
+      L_FOUND               TYPE FLAG,
+      L_CHUNK1(20),
+      L_CHUNK2(20),
+      L_CHUNK3(20),
+      L_CHUNK4(20),
+      L_CHUNK5(20),
+      L_DATE                TYPE ZPLUNK_DATE,
+      L_TIME                TYPE ZPLUNK_TIME,
+      L_MTE                 TYPE ZPLUNK_TXT255,
+      L_DATIM_L(14)         TYPE N,
+      L_DATIM_H(14)         TYPE N,
+      L_DATIM(14)           TYPE N.
+
+TABLES: ZPLUNK_CCMS_A, ZPLUNK_CCMS_C.
+
+FIELD-SYMBOLS:
+      <l>                   LIKE LINE OF L_TID.
+
+*&---------------------------------------------------------------------*
+*&      Form  ZPLUNK_CCMS_C
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM ZPLUNK_CCMS_C.
+  WRITE:/ 'Collecting ... CCMS Monitor Current Status'.
+
+* Load the MTE class names into an internal table
+  REFRESH L_MTE_TID.
+  REFRESH L_ZPLUNK_CCMS_MTES.
+
+  SELECT *
+  FROM ZPLUNK_CCMS_MTES
+  INTO TABLE L_ZPLUNK_CCMS_MTES
+  WHERE THRESHOLD_ACTIVE NE 'N'.
+  LOOP AT L_ZPLUNK_CCMS_MTES.
+
+    L_MTE = L_ZPLUNK_CCMS_MTES-MTECLASS.
+    CALL METHOD ZPLUNK_COMMON=>CCMS_MTE_GETTIME
+      EXPORTING
+        MTE    = L_MTE
+      IMPORTING
+        RESULT = L_RESULT.
+    L_DATE = L_RESULT+0(8).
+    L_TIME = L_RESULT+8(6).
+    CALL FUNCTION 'SWI_DURATION_DETERMINE'
+      EXPORTING
+        START_DATE = L_DATE
+        START_TIME = L_TIME
+        END_DATE   = L_DATEL
+        END_TIME   = L_TIMEL
+      IMPORTING
+        DURATION   = L_SECS.
+    IF SY-SUBRC NE 0.
+      CONTINUE.
+    ELSE.
+      CALL METHOD ZPLUNK_COMMON=>CCMS_MTE_TOUCH
+        EXPORTING
+          MTE    = L_MTE
+        IMPORTING
+          RESULT = L_RESULT.
+    ENDIF.
+
+    L_SECS = L_SECS / 60.
+    IF L_SECS LT L_ZPLUNK_CCMS_MTES-COLL_FREQ_MINS AND L_SECS NE 0.   " Only continue if time elapsed since last collect > collection duration set
+      CONTINUE.
+    ENDIF.
+
+    REFRESH L_TID.
+    CALL FUNCTION 'SALC_GET_MTE_BY_CLASS'
+      EXPORTING
+        MTECLASS                      = L_ZPLUNK_CCMS_MTES-MTECLASS
+        SYSID                         = SY-SYSID
+      IMPORTING
+        TIDS_FOR_MTECLASS             = L_TID
+      EXCEPTIONS
+        SYSTEM_INVALID                = 1
+        SYSTEM_NOT_AVAILABLE          = 2
+        OTHER_PROBLEM                 = 3
+        INVALID_PARAM                 = 4
+        SALC_INTERNAL_ERROR           = 5
+        GROUP_NOT_FOUND_IN_REPOSITORY = 6
+        GROUP_HAS_NO_MEMBERS          = 7.
+    IF SY-SUBRC NE 0.
+      CONTINUE.
+    ENDIF.
+
+    LOOP AT L_TID ASSIGNING <l>.
+      CLEAR L_MTE_TID.
+      L_MTE_TID-MSEGNAME   = L_ZPLUNK_CCMS_MTES-MTECLASS.
+      L_MTE_TID-MTSYSID    = <l>-MTSYSID.
+      L_MTE_TID-MTMCNAME   = <l>-MTMCNAME.
+      L_MTE_TID-MTNUMRANGE = <l>-MTNUMRANGE.
+      L_MTE_TID-MTUID      = <l>-MTUID.
+      L_MTE_TID-MTCLASS    = <l>-MTCLASS.
+      L_MTE_TID-MTINDEX    = <l>-MTINDEX.
+      SEARCH L_MTE_TID-MTMCNAME FOR SY-HOST.
+      IF SY-SUBRC NE 0.
+        CONTINUE.
+      ENDIF.
+      APPEND L_MTE_TID.
+
+      REFRESH L_PR_TID.
+      L_PR_TID-MTSYSID    = <l>-MTSYSID.
+      L_PR_TID-MTMCNAME   = <l>-MTMCNAME.
+      L_PR_TID-MTNUMRANGE = <l>-MTNUMRANGE.
+      L_PR_TID-MTUID      = <l>-MTUID.
+      L_PR_TID-MTCLASS    = <l>-MTCLASS.
+      L_PR_TID-MTINDEX    = <l>-MTINDEX.
+      APPEND L_PR_TID.
+      CALL FUNCTION 'SALC_PERF_READ'
+        EXPORTING
+          ONLY_LOCAL    = 'X'
+          BYPASS_CACHE  = 'X'
+        TABLES
+          TID           = L_PR_TID
+          PERFTYPERC    = L_PR_RET
+        EXCEPTIONS
+          C_CALL_FAILED = 1
+          OTHERS        = 2.
+      IF SY-SUBRC NE 0.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE L_PR_RET INDEX 1.
+      IF L_PR_RET-THRESHDIR NE 1 AND L_PR_RET-THRESHDIR NE 2.  " Note which alerts are threshold-based
+        L_ZPLUNK_CCMS_MTES-THRESHOLD_ACTIVE = 'N'.
+        UPDATE ZPLUNK_CCMS_MTES FROM L_ZPLUNK_CCMS_MTES.
+        CONTINUE.
+      ENDIF.
+
+* If we get here in the loop, we know the MTE is threshold driven.  Check the threshold for alert triggers
+      CLEAR L_CCMS_C.
+      L_CCMS_C-MSG = 'OK'.
+      L_CCMS_C-SEVERITY = 'G'.
+      IF L_PR_RET-THRESHDIR EQ 1.    " Alert if over threshold
+        IF L_PR_RET-ALRELEVVAL GT L_PR_RET-ACTIVTHG2Y.
+          L_CCMS_C-SEVERITY = 'Y'.
+          MOVE L_PR_RET-ALRELEVVAL TO L_CHUNK1.
+          MOVE L_PR_RET-ACTIVTHG2Y TO L_CHUNK2.
+          CONCATENATE L_ZPLUNK_CCMS_MTES-MTECLASS 'yellow alert' L_CHUNK1 '>=' L_CHUNK2 L_PR_RET-VALUNIT
+             INTO L_CCMS_C-MSG SEPARATED BY SPACE.
+        ENDIF.
+        IF L_PR_RET-ALRELEVVAL GT L_PR_RET-ACTIVTHY2R.
+          L_CCMS_C-SEVERITY = 'R'.
+          MOVE L_PR_RET-ALRELEVVAL TO L_CHUNK1.
+          MOVE L_PR_RET-ACTIVTHY2R TO L_CHUNK2.
+          CONCATENATE L_ZPLUNK_CCMS_MTES-MTECLASS 'red alert' L_CHUNK1 '>=' L_CHUNK2 L_PR_RET-VALUNIT
+             INTO L_CCMS_C-MSG SEPARATED BY SPACE.
+        ENDIF.
+      ENDIF.
+      IF L_PR_RET-THRESHDIR EQ 2.    " Alert if under threshold
+        IF L_PR_RET-ALRELEVVAL LT L_PR_RET-ACTIVTHG2Y.
+          L_CCMS_C-SEVERITY = 'Y'.
+          MOVE L_PR_RET-ALRELEVVAL TO L_CHUNK1.
+          MOVE L_PR_RET-ACTIVTHG2Y TO L_CHUNK2.
+          CONCATENATE L_ZPLUNK_CCMS_MTES-MTECLASS 'yellow alert' L_CHUNK1 '<=' L_CHUNK2 L_PR_RET-VALUNIT
+             INTO L_CCMS_C-MSG SEPARATED BY SPACE.
+        ENDIF.
+        IF L_PR_RET-ALRELEVVAL LT L_PR_RET-ACTIVTHY2R.
+          L_CCMS_C-SEVERITY = 'R'.
+          MOVE L_PR_RET-ALRELEVVAL TO L_CHUNK1.
+          MOVE L_PR_RET-ACTIVTHY2R TO L_CHUNK2.
+          CONCATENATE L_ZPLUNK_CCMS_MTES-MTECLASS 'red alert' L_CHUNK1 '<=' L_CHUNK2 L_PR_RET-VALUNIT
+             INTO L_CCMS_C-MSG SEPARATED BY SPACE.
+        ENDIF.
+      ENDIF.
+
+      SPLIT L_ALERTRC-MSEGNAME AT '_' INTO L_CHUNK1 L_CHUNK2 L_CHUNK3 L_CHUNK4 L_CHUNK5.
+      L_CCMS_C-SAMPLEDATE = L_DATEL.
+      L_CCMS_C-SAMPLETIME = L_TIMEL.
+      IF L_CHUNK3 NE SY-HOST OR L_CHUNK4 NE SY-SYSID.  " Some MTES are system-wide and not node-specific
+        L_CCMS_C-HOST       = L_CI_HOST.
+        L_CCMS_C-SYSNAME    = L_CI_SYSID.
+        L_CCMS_C-SYSNR      = L_CI_SYSNR.
+      ELSE.
+        L_CCMS_C-HOST       = L_CHUNK3.
+        L_CCMS_C-SYSNAME    = L_CHUNK4.
+        L_CCMS_C-SYSNR      = L_CHUNK5.
+      ENDIF.
+      L_CCMS_C-MTECLASS        = L_ZPLUNK_CCMS_MTES-MTECLASS.
+      L_CCMS_C-SENT            = ' '.
+      L_CCMS_C-OBSERVATION     = L_PR_RET-ALRELEVVAL.
+      L_CCMS_C-OBSERVATION_UOM = L_PR_RET-VALUNIT.
+      CONDENSE L_CCMS_C-MSG.
+
+      SELECT * FROM ZPLUNK_CCMS_C
+      WHERE SAMPLEDATE = L_CCMS_C-SAMPLEDATE AND
+            SAMPLETIME = L_CCMS_C-SAMPLETIME AND
+            HOST       = L_CCMS_C-HOST AND
+            SYSNAME    = L_CCMS_C-SYSNAME AND
+            SYSNR      = L_CCMS_C-SYSNR AND
+            MTECLASS   = L_CCMS_C-MTECLASS.
+      ENDSELECT.
+      IF SY-SUBRC NE 0.
+        INSERT INTO ZPLUNK_CCMS_C VALUES L_CCMS_C.
+      ENDIF.
+    ENDLOOP.
+
+    IF L_ZPLUNK_CCMS_MTES-THRESHOLD_ACTIVE IS INITIAL.
+      L_ZPLUNK_CCMS_MTES-THRESHOLD_ACTIVE = 'Y'.
+    ENDIF.
+    UPDATE ZPLUNK_CCMS_MTES FROM L_ZPLUNK_CCMS_MTES.
+  ENDLOOP.
+  COMMIT WORK.
+  FREE L_MTE_TID.
+ENDFORM.                    "ZPLUNK_CCMS_C
+
+*&---------------------------------------------------------------------*
+*&      Form  ZPLUNK_CCMS_A
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM ZPLUNK_CCMS_A.
+  WRITE:/ 'Collecting ... CCMS Monitor Alerts'.
+
+  DATA: L_PARAMETER_TABLE LIKE PARMVALUES OCCURS 0 WITH HEADER LINE,
+        L_ALERTFOUND(1) VALUE 'N',
+        L_LEN TYPE I,
+        L_POS1 TYPE I,
+        L_FNAME(200),
+        L_VAR1(200),
+        L_VAR2(200),
+        L_VAR3(200),
+        L_VAR4(200),
+        L_MTE(200),
+        L_COLOUR(20),
+        L_TIME(20),
+        L_TIMESTAMP TYPE TIMESTAMP,
+        L_MSGTEXT(200),
+        L_BUFFER(200).
+
+* Get the local alert filename
+  L_PARAMETER_TABLE-PARAM_NAME = 'alert/ALERTS'.
+  APPEND L_PARAMETER_TABLE.
+  CALL FUNCTION 'PFL_GET_PARAMETER'
+    TABLES
+      PARAMETER_TABLE = L_PARAMETER_TABLE.
+  IF SY-SUBRC NE 0.
+    EXIT.
+  ENDIF.
+  L_FNAME = L_PARAMETER_TABLE-USER_VALUE.
+
+  OPEN DATASET L_FNAME FOR INPUT IN TEXT MODE ENCODING DEFAULT WITH SMART LINEFEED.
+  IF SY-SUBRC NE 0.
+     WRITE: / 'No alert file found'.
+     EXIT.
+  ENDIF.
+  DO.
+    READ DATASET L_FNAME INTO L_BUFFER.
+    IF SY-SUBRC NE 0.
+      EXIT.
+    ENDIF.
+    L_LEN = STRLEN( L_BUFFER ).
+* Parse the buffer lines and react accordingly
+    IF L_BUFFER+0(9) = 'OLD_ALERT'.                 " Start of alert record
+      L_ALERTFOUND = 'Y'.
+    ELSEIF L_BUFFER+0(1) = '.'.                     " End of alert record.
+      L_ALERTFOUND = 'N'.
+      SEARCH L_MSGTEXT FOR '&1'.
+      IF SY-SUBRC = 0.
+        REPLACE ALL OCCURRENCES OF '&1' IN L_MSGTEXT WITH L_VAR1.
+      ELSE.
+        CONCATENATE L_MSGTEXT L_VAR1 INTO L_MSGTEXT SEPARATED BY SPACE.
+      ENDIF.
+      SEARCH L_MSGTEXT FOR '&2'.
+      IF SY-SUBRC = 0.
+        REPLACE ALL OCCURRENCES OF '&2' IN L_MSGTEXT WITH L_VAR2.
+      ELSE.
+        CONCATENATE L_MSGTEXT L_VAR2 INTO L_MSGTEXT SEPARATED BY SPACE.
+      ENDIF.
+      SEARCH L_MSGTEXT FOR '&3'.
+      IF SY-SUBRC = 0.
+        REPLACE ALL OCCURRENCES OF '&3' IN L_MSGTEXT WITH L_VAR3.
+      ELSE.
+        CONCATENATE L_MSGTEXT L_VAR3 INTO L_MSGTEXT SEPARATED BY SPACE.
+      ENDIF.
+      SEARCH L_MSGTEXT FOR '&4'.
+      IF SY-SUBRC = 0.
+        REPLACE ALL OCCURRENCES OF '&4' IN L_MSGTEXT WITH L_VAR4.
+      ELSE.
+        CONCATENATE L_MSGTEXT L_VAR4 INTO L_MSGTEXT SEPARATED BY SPACE.
+      ENDIF.
+      CONDENSE L_MSGTEXT.
+
+* Save the alert to table
+      CLEAR L_CCMS_A.
+      MOVE L_TIMESTAMP TO L_TIME.
+      SHIFT L_TIME LEFT DELETING LEADING SPACE.
+      L_CCMS_A-SAMPLEDATE = L_TIME+0(8).
+      L_CCMS_A-SAMPLETIME = L_TIME+8(6).
+      L_CCMS_A-HOST = L_HOST.                                " This instance host name
+      L_CCMS_A-SYSNAME = L_SYSNAME.                          " This instance SID
+      L_CCMS_A-SYSNR = L_SYSNR.                              " This instance system number
+      L_CCMS_A-SEVERITY = L_COLOUR+0(1).
+      L_CCMS_A-MTECLASS   = L_MTE.
+      L_CCMS_A-MSG        = L_MSGTEXT.
+      L_CCMS_A-SENT       = ' '.
+
+      SELECT * FROM ZPLUNK_CCMS_A
+      WHERE SAMPLEDATE = L_CCMS_A-SAMPLEDATE AND
+            SAMPLETIME = L_CCMS_A-SAMPLETIME AND
+            HOST       = L_CCMS_A-HOST AND
+            SYSNAME    = L_CCMS_A-SYSNAME AND
+            SYSNR      = L_CCMS_A-SYSNR AND
+            MTECLASS   = L_CCMS_A-MTECLASS.
+      ENDSELECT.
+      IF SY-SUBRC NE 0.
+        INSERT INTO ZPLUNK_CCMS_A VALUES L_CCMS_A.
+      ENDIF.
+      COMMIT WORK.
+    ELSEIF L_BUFFER+0(7)  = '  NAME='.              " Alert MTE name
+      L_POS1 = 7.
+      L_LEN = L_LEN - L_POS1.
+      L_MTE = L_BUFFER+L_POS1(L_LEN).
+      REPLACE ALL OCCURRENCES OF '"' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '<' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '>' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '(' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF ')' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '=' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF ';' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '.' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF ',' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '/' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '\' IN L_MTE WITH '_'.
+      REPLACE ALL OCCURRENCES OF '#' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '-' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF '[' IN L_MTE WITH SPACE.
+      REPLACE ALL OCCURRENCES OF ']' IN L_MTE WITH SPACE.
+      CONDENSE L_MTE.
+      SHIFT L_MTE LEFT DELETING LEADING '_'.
+    ELSEIF L_BUFFER+0(8)  = '  VALUE='.             " Alert severity (Red, Yellow or Green)
+      L_POS1 = 8.
+      SEARCH L_BUFFER FOR 'SEVERITY='.
+      IF SY-SUBRC = 0.
+        L_LEN = SY-FDPOS - L_POS1.
+        L_COLOUR = L_BUFFER+L_POS1(L_LEN).
+        REPLACE ALL OCCURRENCES OF '"' IN L_COLOUR WITH SPACE.
+        CONDENSE L_COLOUR.
+      ELSE.
+        L_ALERTFOUND = 'N'.
+      ENDIF.
+      SEARCH L_BUFFER FOR 'TIME='.
+      IF SY-SUBRC = 0.
+        L_POS1 = SY-FDPOS + 5.
+        L_LEN = STRLEN( L_BUFFER ) - L_POS1.
+        L_TIME = L_BUFFER+L_POS1(L_LEN).
+        REPLACE ALL OCCURRENCES OF '"' IN L_TIME WITH SPACE.
+        CONDENSE L_TIME.
+        MOVE L_TIME TO L_TIMESTAMP.
+        CALL METHOD ZPLUNK_COMMON=>CONV_SECS_SINCE_EPOCH
+          CHANGING
+            SECS_SINCE_EPOCH = L_TIMESTAMP.
+      ELSE.
+        L_ALERTFOUND = 'N'.
+      ENDIF.
+    ELSEIF L_BUFFER+0(10) = '  MSG_TXT='.
+      L_POS1 = 10.
+      L_LEN = L_LEN - L_POS1.
+      L_MSGTEXT = L_BUFFER+L_POS1(L_LEN).
+      REPLACE ALL OCCURRENCES OF '"' IN L_MSGTEXT WITH SPACE.
+      CONDENSE L_MSGTEXT.
+    ELSEIF L_BUFFER+0(7) = ' TYPE0='.               " Variable 0 or "&1" as substituted later
+      SEARCH L_BUFFER FOR 'VAR0='.
+      IF SY-SUBRC = 0.
+        L_POS1 = SY-FDPOS + 5.
+        L_LEN = L_LEN - L_POS1.
+        L_VAR1 = L_BUFFER+L_POS1(L_LEN).
+        REPLACE ALL OCCURRENCES OF '"' IN L_VAR1 WITH SPACE.
+        CONDENSE L_VAR1.
+      ELSE.
+        L_ALERTFOUND = 'N'.
+      ENDIF.
+    ELSEIF L_BUFFER+0(7) = ' TYPE1='.               " Variable 1 or "&2" as substituted later
+      SEARCH L_BUFFER FOR 'VAR1='.
+      IF SY-SUBRC = 0.
+        L_POS1 = SY-FDPOS + 5.
+        L_LEN = L_LEN - L_POS1.
+        L_VAR2 = L_BUFFER+L_POS1(L_LEN).
+        REPLACE ALL OCCURRENCES OF '"' IN L_VAR2 WITH SPACE.
+        CONDENSE L_VAR2.
+      ELSE.
+        L_ALERTFOUND = 'N'.
+      ENDIF.
+    ELSEIF L_BUFFER+0(7) = ' TYPE2='.               " Variable 2 or "&3" as substituted later
+      SEARCH L_BUFFER FOR 'VAR2='.
+      IF SY-SUBRC = 0.
+        L_POS1 = SY-FDPOS + 5.
+        L_LEN = L_LEN - L_POS1.
+        L_VAR3 = L_BUFFER+L_POS1(L_LEN).
+        REPLACE ALL OCCURRENCES OF '"' IN L_VAR3 WITH SPACE.
+        CONDENSE L_VAR3.
+      ELSE.
+        L_ALERTFOUND = 'N'.
+      ENDIF.
+    ELSEIF L_BUFFER+0(7) = ' TYPE3='.               " Variable 3 or "&4" as substituted later
+      SEARCH L_BUFFER FOR 'VAR3='.
+      IF SY-SUBRC = 0.
+        L_POS1 = SY-FDPOS + 5.
+        L_LEN = L_LEN - L_POS1.
+        L_VAR4 = L_BUFFER+L_POS1(L_LEN).
+        REPLACE ALL OCCURRENCES OF '"' IN L_VAR4 WITH SPACE.
+        CONDENSE L_VAR4.
+      ELSE.
+        L_ALERTFOUND = 'N'.
+      ENDIF.
+    ENDIF.
+  ENDDO.
+  CLOSE DATASET L_FNAME.
+ENDFORM.                    "ZPLUNK_CCMS_A
