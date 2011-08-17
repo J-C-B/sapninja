@@ -1,0 +1,40 @@
+DATE                                              20101116                                          134756
+RELEASE                                           700
+LOADED_AGRS                                       ZSAPNINJA_RFC
+AGR_DEFINE                                        001ZSAPNINJA_RFC                                               JCOOKE      20101110102932000000000000000JCOOKE      20101116134726000000000000000
+AGR_1250                                          001ZSAPNINJA_RFC                 000001S_DEVELOP ZNINJARFC_00    U  O000015ABAP Workbench
+AGR_1250                                          001ZSAPNINJA_RFC                 000002S_RFC     ZNINJARFC_00    U  O000004Authorization Check for RFC Access
+AGR_1250                                          001ZSAPNINJA_RFC                 000003S_TABU_DISZNINJARFC_00    U  O000010Table Maintenance (via standard tools such as SM30)
+AGR_1251                                          001ZSAPNINJA_RFC                 000001S_DEVELOP ZNINJARFC_00    ACTVT     03                                                                              U  O000016
+AGR_1251                                          001ZSAPNINJA_RFC                 000002S_DEVELOP ZNINJARFC_00    DEVCLASS  SRCX                                                                            U  O000017
+AGR_1251                                          001ZSAPNINJA_RFC                 000003S_DEVELOP ZNINJARFC_00    OBJNAME   GRFC                                                                            U  O000018
+AGR_1251                                          001ZSAPNINJA_RFC                 000004S_DEVELOP ZNINJARFC_00    OBJTYPE   FUGR                                                                            U  O000019
+AGR_1251                                          001ZSAPNINJA_RFC                 000005S_DEVELOP ZNINJARFC_00    P_GROUP   *                                                                               U  O000020
+AGR_1251                                          001ZSAPNINJA_RFC                 000006S_RFC     ZNINJARFC_00    ACTVT     16                                                                              U  O000005
+AGR_1251                                          001ZSAPNINJA_RFC                 000007S_RFC     ZNINJARFC_00    RFC_NAME  RFC1                                                                            U  O000006
+AGR_1251                                          001ZSAPNINJA_RFC                 000008S_RFC     ZNINJARFC_00    RFC_NAME  SDIFRUNTIME                                                                     U  O000006
+AGR_1251                                          001ZSAPNINJA_RFC                 000009S_RFC     ZNINJARFC_00    RFC_NAME  SYST                                                                            U  O000006
+AGR_1251                                          001ZSAPNINJA_RFC                 000010S_RFC     ZNINJARFC_00    RFC_NAME  ZPLUNK_FGRP                                                                     U  O000006
+AGR_1251                                          001ZSAPNINJA_RFC                 000011S_RFC     ZNINJARFC_00    RFC_TYPE  FUGR                                                                            U  O000007
+AGR_1251                                          001ZSAPNINJA_RFC                 000012S_TABU_DISZNINJARFC_00    ACTVT     03                                                                              U  O000011
+AGR_1251                                          001ZSAPNINJA_RFC                 000013S_TABU_DISZNINJARFC_00    DICBERCLS SS                                                                              U  O000012
+AGR_1251                                          001ZSAPNINJA_RFC                 000014S_RFC     ZNINJARFC_00    RFC_NAME  SIFP                                                                            U  O000006
+AGR_1251                                          001ZSAPNINJA_RFC                 000015S_RFC     ZNINJARFC_00    RFC_NAME  SDTX                                                                            U  O000006
+AGR_1251                                          001ZSAPNINJA_RFC                 000016S_RFC     ZNINJARFC_00    RFC_NAME  MRFC                                                                            U  O000006
+AGR_1251                                          001ZSAPNINJA_RFC                 000017S_RFC     ZNINJARFC_00    RFC_NAME  STFE                                                                            U  O000006
+AGR_TEXTS                                         001ZSAPNINJA_RFC                 E00000SAP Ninja RFC User Role
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 AUTOUSERPRJCOOKE      20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 COLL_AGR  JCOOKE      20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 DEVCLASS  JCOOKE      20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 EXTSAP_F01JCOOKE      20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 EXTSAP_F02JCOOKE      20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 EXTSAP_F03JCOOKE      20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 EXTSAP_F04JCOOKE      20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 EXTSAP_F05JCOOKE      20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 FORCE_MIX JCOOKE      20101110103410JCOOKE      20101110111755
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 MAINT_VERSJCOOKE      20101110103415JCOOKE      20101110111755
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 MASTER_LANJCOOKE      20101110102932JCOOKE      20101110102932E
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 RESP_USER             20101110102932JCOOKE      20101110102932
+AGR_FLAGS                                         001ZSAPNINJA_RFC                 SYS_FLAG  JCOOKE      20101110102932JCOOKE      20101110102932
+AGR_TIME                                          001ZSAPNINJA_RFC                 PROFILE   JCOOKE      20101110103410000000000000000JCOOKE      20101110111755000000000000000
+AGR_LSD                                           001ZSAPNINJA_RFC                                               E
