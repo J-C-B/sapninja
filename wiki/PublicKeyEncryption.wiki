@@ -17,7 +17,7 @@ You will need to download and implement the following ABAP functions:
    * Once you have implemented them, encryption and decryption can be done by using function ZMODEXP. 
 
 ==At it's simplest==
-Assume that we want to encrypt and decrypt the letter "A".  If we translate it to it's ASCII code of 65, the following will illustrate the use of the functions.<br><br>
+Assume that we want to encrypt and decrypt the letter "A".  If we translate it to it's ASCII code of 65, the following will illustrate the use of the functions.<br>
 Assume the following<br>
    * Public Key = 17
    * Private Key = 2753
