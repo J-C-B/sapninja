@@ -32,9 +32,19 @@ CALL FUNCTION ZMODEXP
       MODULUS = 3233
    IMPORTING 
       RESULT = RESULT
+* The resulting encrypted number will be 2790.
 }}}
-The resulting encrypted number will be 2790.
-
+To encrypt 2790 with the private key
+{{{
+CALL FUNCTION ZMODEXP
+   IMPORTING
+      BASE    = 2790
+      KEY     = 2753
+      MODULUS = 3233
+   IMPORTING 
+      RESULT = RESULT
+* The resulting decrypted number will be 65, which is what we started with
+}}}
 = Hypothetical Example =
    * Say you have an application with an annual license.  Your license checking routine checks to see if license year has expired.  For our example, we are going to issue a license for the year 2011.
    * Using the example keys from the Wikipedia example we decide to use the following keys:
