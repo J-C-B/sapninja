@@ -9,12 +9,31 @@ SAPNINJA has provided ABAP implementations of two functions that provide the mos
 You will need to use your own creativity to use the function provided here to encrypt text.  You will also need to generate your own public key, private key and modulus to be secure.  There are tools available on the web that will help you do this. 
 
 
-= Details =
+=Details=
 
 You will need to download and implement the following ABAP functions:
    * [http://code.google.com/p/sapninja/source/browse/trunk/tools/functionmodules/zmodexp.txt ZMODEXP]
    * [http://code.google.com/p/sapninja/source/browse/trunk/tools/functionmodules/zdec2bin.txt ZDEC2BIN]
    * Once you have implemented them, encryption and decryption can be done by using function ZMODEXP. 
+
+==At it's simplest==
+Assume that we want to encrypt and decrypt the letter "A".  If we translate it to it's ASCII code of 65, the following will illustrate the use of the functions.<br><br>
+Assume the following<br>
+   * Public Key = 17
+   * Private Key = 2753
+   * Modulus = 3233
+<br><br>
+To encrypt 65 with the public key
+{{{
+CALL FUNCTION ZMODEXP
+   IMPORTING
+      BASE    = 65
+      KEY     = 17
+      MODULUS = 3233
+   IMPORTING 
+      RESULT = RESULT
+}}}
+The resulting encrypted number will be 2790.
 
 = Hypothetical Example =
    * Say you have an application with an annual license.  Your license checking routine checks to see if license year has expired.  For our example, we are going to issue a license for the year 2011.
