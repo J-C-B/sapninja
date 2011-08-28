@@ -3,16 +3,17 @@
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
-* 
+*
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-* 
+*
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ----------------------------------------------------------------------
-METHOD KEYPAIRT.
-   RESULT = ''.
-   CONCATENATE KEY '='  VALUE INTO RESULT.
-ENDMETHOD.
+PROGRAM ZPLUNKSAPMSM21 MESSAGE-ID SL NO STANDARD PAGE HEADING.
+* This program is intentionally left blank.  It will be created as a modified copy of SAPMSM21 by include
+* program ZPLUNK0007 to ensure it works properly with your version of the SAP_BASIS module.
+*
+* IT IS VERY IMPORTANT THAT YOU ACTIVATE THIS CODE SO ZPLUNK0007 IS ABLE TO CHANGE IT PROPERLY!
