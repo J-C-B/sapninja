@@ -7,21 +7,18 @@ FUNCTION ZPLUNK_GET .
 *"     VALUE(RESULT) TYPE  STRINGTAB
 *"----------------------------------------------------------------------
 * ----------------------------------------------------------------------
-* Splunk data extractor function community version.  Extracts 
-* accumulated Splunk data via RFC
-* 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
-* 
+*
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ----------------------------------------------------------------------
 
   DATA: L_SAMPLEDATE TYPE ZPLUNK_DATE,
@@ -29,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         L_ZPLUNK_ST03N TYPE ZPLUNK_ST03N OCCURS 0 WITH HEADER LINE,
         L_ZPLUNK_SM04USR TYPE ZPLUNK_SM04USR OCCURS 0 WITH HEADER LINE,
         L_ZPLUNK_SM04MEM TYPE ZPLUNK_SM04MEM OCCURS 0 WITH HEADER LINE,
+        L_ZPLUNK_SM20 TYPE ZPLUNK_SM20 OCCURS 0 WITH HEADER LINE,
         L_ZPLUNK_SM21 TYPE ZPLUNK_SM21 OCCURS 0 WITH HEADER LINE,
         L_ZPLUNK_CCMS_A TYPE ZPLUNK_CCMS_A OCCURS 0 WITH HEADER LINE,
         L_ZPLUNK_CCMS_C TYPE ZPLUNK_CCMS_C OCCURS 0 WITH HEADER LINE,
@@ -712,6 +710,117 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               SYSNAME = L_ZPLUNK_SM04MEM-SYSNAME AND
               SYSNR = L_ZPLUNK_SM04MEM-SYSNR AND
               IDX = L_ZPLUNK_SM04MEM-IDX.
+      ENDSELECT.
+    WHEN 'ZPLUNK_SM20'.
+      L_IDX = 0.
+* Load the latest records into an internal table
+      SELECT *
+      FROM ZPLUNK_SM20
+      INTO L_ZPLUNK_SM20
+      WHERE SENT NE 'X' OR SENT IS NULL.
+        L_IDX = L_IDX + 1.
+        " Timestamp
+        CALL METHOD ZPLUNK_COMMON=>TIMESTAMP
+          EXPORTING
+            RAWDATE = L_ZPLUNK_SM20-SAMPLEDATE
+            RAWTIME = L_ZPLUNK_SM20-SAMPLETIME
+          IMPORTING
+            RESULT  = L_TOKEN.
+        L_LOGLINE = L_TOKEN.
+        " HOST
+        L_VALUE = L_ZPLUNK_SM20-HOST.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'saphost'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE L_TOKEN INTO L_LOGLINE SEPARATED BY SPACE.
+        " SID
+        L_VALUE = L_ZPLUNK_SM20-SYSNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " SYSNR
+        L_VALUE = L_ZPLUNK_SM20-SYSNR.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'sysnr'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MANDT
+        L_VALUE = L_ZPLUNK_SM20-MANDT.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'mandt'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " BNAME
+        L_VALUE = L_ZPLUNK_SM20-BNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'bname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " TERM
+        L_VALUE = L_ZPLUNK_SM20-TERM.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'term'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " TCODE
+        L_VALUE = L_ZPLUNK_SM20-TCODE.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'tcode'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " REPNAME
+        L_VALUE = L_ZPLUNK_SM20-REPNAME.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'repname'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+        " MSG
+        L_VALUE = L_ZPLUNK_SM20-MSG.
+        CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+          EXPORTING
+            KEY    = 'msg'
+            VALUE  = L_VALUE
+          IMPORTING
+            RESULT = L_TOKEN.
+        CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+
+        INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
+        UPDATE ZPLUNK_SM20 SET SENT = 'X'
+        WHERE SAMPLEDATE = L_ZPLUNK_SM20-SAMPLEDATE AND
+              SAMPLETIME = L_ZPLUNK_SM20-SAMPLETIME AND
+              HOST = L_ZPLUNK_SM20-HOST AND
+              SYSNAME = L_ZPLUNK_SM20-SYSNAME AND
+              SYSNR = L_ZPLUNK_SM20-SYSNR AND
+              MANDT = L_ZPLUNK_SM20-MANDT AND
+              BNAME = L_ZPLUNK_SM20-BNAME AND
+              TERM = L_ZPLUNK_SM20-TERM AND
+              TCODE = L_ZPLUNK_SM20-TCODE AND
+              REPNAME = L_ZPLUNK_SM20-REPNAME.
       ENDSELECT.
     WHEN 'ZPLUNK_SM21'.
       L_IDX = 0.

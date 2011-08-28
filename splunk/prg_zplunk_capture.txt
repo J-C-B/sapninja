@@ -3,14 +3,14 @@
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
-* 
+*
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ----------------------------------------------------------------------
 REPORT ZPLUNK_CAPTURE NO STANDARD PAGE HEADING LINE-SIZE 255.
 
@@ -27,6 +27,7 @@ LOAD-OF-PROGRAM.
   INCLUDE ZPLUNK0008.                 " CCMS Alerts
   INCLUDE ZPLUNK0009.                 " SM50 Workload Overview
   INCLUDE ZPLUNK0010.                 " Print Jobs
+  INCLUDE ZPLUNK0011.                 " SM20 Security Audit Logs
 
 START-OF-SELECTION.
 
@@ -111,6 +112,10 @@ START-OF-SELECTION.
   PARAMETERS: P_CCMS_A AS CHECKBOX DEFAULT 'X'.
   SELECTION-SCREEN COMMENT 70(20) TEXT-546.
   PARAMETERS: P_SPOOL AS CHECKBOX DEFAULT 'X'.
+  SELECTION-SCREEN END OF LINE.
+  SELECTION-SCREEN BEGIN OF LINE.
+  SELECTION-SCREEN COMMENT 1(20) TEXT-547.
+  PARAMETERS: P_SM20 AS CHECKBOX DEFAULT 'X'.
   SELECTION-SCREEN END OF LINE.
   SELECTION-SCREEN END OF BLOCK BLOCK4.
 
@@ -330,19 +335,7 @@ END-OF-SELECTION.
           DATASET = 'SM21'
         IMPORTING
           RESULT  = L_RESULT.
-* The system log function is sensitive about component version.  Only run for matching versions.
-      SELECT SINGLE *
-      FROM PAT03
-      INTO L_PAT03
-      WHERE COMPONENT = 'SAP_BASIS'.
-      IF SY-SUBRC = 0.
-         L_COMP_REL = L_PAT03-COMP_REL.
-      ELSE.
-         L_COMP_REL = '?'.
-      ENDIF.
-      IF L_COMP_REL = '700'.
-         PERFORM ZPLUNK_SM21_700.
-      ENDIF.
+      PERFORM ZPLUNK_SM21.
       CALL METHOD ZPLUNK_COMMON=>UNLOCK
         EXPORTING
           DATASET = 'SM21'
@@ -353,6 +346,41 @@ END-OF-SELECTION.
       DELETE FROM ZPLUNK_SM21 WHERE SAMPLEDATE < L_CUT.
     ELSEIF RBD2 = 'X' AND SY-HOST = L_CI_HOST.
       DELETE FROM ZPLUNK_SM21 WHERE SENT = 'X'.
+    ENDIF.
+  ENDIF.
+  IF P_SM20 = 'X'.
+    DO 30 TIMES.
+      CALL METHOD ZPLUNK_COMMON=>CHECKLOCK
+        EXPORTING
+          DATASET     = 'SM20'
+          EXPIRY_DATE = L_DATEF
+          EXPIRY_TIME = L_TIMEF
+        IMPORTING
+          RESULT      = L_RESULT.
+      IF L_RESULT EQ 'N'.
+        EXIT.
+      ENDIF.
+      CALL FUNCTION 'ENQUE_SLEEP'
+        EXPORTING
+          SECONDS = 1.
+    ENDDO.
+    IF L_RESULT EQ 'N'.
+      CALL METHOD ZPLUNK_COMMON=>LOCK
+        EXPORTING
+          DATASET = 'SM20'
+        IMPORTING
+          RESULT  = L_RESULT.
+      PERFORM ZPLUNK_SM20 USING L_SYSNAME L_SYSNR L_DATEF L_TIMEF L_DATET L_TIMET.
+      CALL METHOD ZPLUNK_COMMON=>UNLOCK
+        EXPORTING
+          DATASET = 'SM20'
+        IMPORTING
+          RESULT  = L_RESULT.
+    ENDIF.
+    IF RBD1 = 'X' AND SY-HOST = L_CI_HOST.
+      DELETE FROM ZPLUNK_SM20 WHERE SAMPLEDATE < L_CUT.
+    ELSEIF RBD2 = 'X' AND SY-HOST = L_CI_HOST.
+      DELETE FROM ZPLUNK_SM20 WHERE SENT = 'X'.
     ENDIF.
   ENDIF.
   IF P_SM04_1 = 'X'.

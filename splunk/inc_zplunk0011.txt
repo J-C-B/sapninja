@@ -1,0 +1,122 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZPLUNK0011
+*&---------------------------------------------------------------------*
+* ----------------------------------------------------------------------
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+INCLUDE MSM20TO1.
+INCLUDE MSM20F09.
+FORM ZPLUNK_SM20 USING P_SYSNAME P_SYSNR P_DATEF P_TIMEF P_DATET P_TIMET.
+  DATA: L_SELECTION LIKE RSLGSEL,
+        L_SELECTION_AUDIT LIKE RSAUSEL,
+        L_COUNTERS LIKE RSLGRECCNT,
+        L_END_INFO LIKE RSLGTYPE-END_INFO,
+        L_END_REASON LIKE RSLGTYPE-END_REASON,
+        L_FILE_NO_NEW LIKE RSLGETAB-FILE_NO,
+        L_START_TIMESTAMP(16),
+        L_END_TIMESTAMP(16),
+        LT_SM20 TYPE ZPLUNK_SM20,
+        L_SYSLOG_IN_TABLE LIKE RSAUETAB2 OCCURS 0 WITH HEADER LINE,
+        L_ENTRY LIKE RSAUENTR2,
+        L_AREA TYPE ZPLUNK_TXT2,
+        L_SUBID TYPE ZPLUNK_TXT1,
+        MSG_TEXT(316),
+        MSG_TEXT_LEN(2) TYPE P,
+        CACHED_ERRNO(6),
+        CACHED_T100(5).
+
+  TABLES: ZPLUNK_SM20.
+
+  WRITE:/ 'Collecting ... Security Audit Logs'.
+
+  L_SELECTION-WHICHLOG = 'A'.
+  L_SELECTION-RFCDEST = 'ALL'.
+  L_SELECTION-DATE = P_DATEF.
+  L_SELECTION-TIME = P_TIMEF.
+  CONCATENATE P_DATEF P_TIMEF '00' INTO L_START_TIMESTAMP.
+  L_SELECTION-STARTDATE = L_START_TIMESTAMP.
+  L_SELECTION-EDATE = P_DATET.
+  L_SELECTION-ETIME = P_TIMET.
+  CONCATENATE P_DATET P_TIMET '00' INTO L_END_TIMESTAMP.
+  L_SELECTION-STOP_DATE = L_END_TIMESTAMP.
+  L_SELECTION-USER = '*'.
+  L_SELECTION_AUDIT-SUBCLASID = 255.
+  L_SELECTION_AUDIT-SEVERITY = 2.
+  L_SELECTION_AUDIT-SELCLIENT = '*'.
+  CALL FUNCTION 'RSAU_READ_FILE'
+    EXPORTING
+      SELECTION       = L_SELECTION
+      SELECTION_AUDIT = L_SELECTION_AUDIT
+    IMPORTING
+      COUNTERS        = L_COUNTERS
+      END_INFO        = L_END_INFO
+      END_REASON      = L_END_REASON
+      FILE_NO_NEW     = L_FILE_NO_NEW
+    TABLES
+      SYSLOG_IN_TABLE = L_SYSLOG_IN_TABLE.
+  IF SY-SUBRC EQ 0.
+    LOOP AT L_SYSLOG_IN_TABLE.
+      MOVE L_SYSLOG_IN_TABLE-CENTDATA TO L_ENTRY.
+      CLEAR LT_SM20.
+      MOVE L_ENTRY-SLGDATTIM+0(8) TO LT_SM20-SAMPLEDATE.  " Log date
+      MOVE L_ENTRY-SLGDATTIM+8(6) TO LT_SM20-SAMPLETIME.  " Log time
+      LT_SM20-HOST = L_HOST.                              " This instance host name
+      LT_SM20-SYSNAME = L_SYSNAME.                        " This instance SID
+      LT_SM20-SYSNR = L_SYSNR.                            " This instance system number
+      LT_SM20-MANDT = L_ENTRY-SLGMAND.                    " Client
+      LT_SM20-BNAME = L_ENTRY-SLGUSER.                    " Username
+      LT_SM20-TERM = L_ENTRY-SLGLTRM2.                    " Terminal
+      LT_SM20-TCODE = L_ENTRY-SLGTC.                      " Transaction code
+      LT_SM20-REPNAME = L_ENTRY-SLGREPNA.                 " Report name
+
+* Now we have to use some weird-arsed functions to construct the actual audit message to look like it does in SM20.  The programmer
+* from SAP did not subscribe to the "KISS" principle!
+      L_AREA = L_ENTRY-SLGTYPE+1(2).
+      L_SUBID = L_ENTRY-SLGTYPE+3(1).
+      PERFORM USE_TABE_AND_DATA
+        USING
+          L_AREA
+          L_SUBID
+          L_ENTRY-SLGDATA
+          MSG_TEXT
+          MSG_TEXT_LEN
+          L_ENTRY-SLGLTRM2
+          L_ENTRY-SLGMODE
+          L_ENTRY-SLGDATTIM
+          CACHED_ERRNO
+          CACHED_T100.
+      LT_SM20-MSG = MSG_TEXT.
+
+     SELECT * FROM ZPLUNK_SM20
+     WHERE SAMPLEDATE = LT_SM20-SAMPLEDATE AND
+           SAMPLETIME = LT_SM20-SAMPLETIME AND
+           HOST = LT_SM20-HOST AND
+           SYSNAME = LT_SM20-SYSNAME AND
+           SYSNR = LT_SM20-SYSNR AND
+           MANDT = LT_SM20-MANDT AND
+           BNAME = LT_SM20-BNAME AND
+           TERM = LT_SM20-TERM AND
+           TCODE = LT_SM20-TCODE AND
+           REPNAME = LT_SM20-REPNAME.
+     ENDSELECT.
+     IF SY-SUBRC NE 0.
+       INSERT INTO ZPLUNK_SM20 VALUES LT_SM20.
+     ENDIF.
+    ENDLOOP.
+  ELSE.
+    WRITE:/ 'Error calling function RSAU_READ_FILE'.
+  ENDIF.
+  COMMIT WORK.
+
+ENDFORM.
