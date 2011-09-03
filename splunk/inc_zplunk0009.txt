@@ -2,19 +2,27 @@
 *&  Include           ZPLUNK0009 - SM50 Work Process Overview
 *&---------------------------------------------------------------------*
 * ----------------------------------------------------------------------
+* Version 1.02
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
-* 
+*
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-* 
+*
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ----------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+* Change Log:
+* ----------
+*   Date       Issue #  Issue Link
+* -----------  -------  ------------------------
+*  3 Sep 2011        1  http://code.google.com/p/sapninja/issues/detail?id=1                                                        *
+*--------------------------------------------------------------------------------
 FORM SM50 USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
   DATA: LT_SM50 TYPE ZPLUNK_SM50.
   TABLES: ZPLUNK_SM50.
@@ -34,14 +42,15 @@ FORM SM50 USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
     LT_SM50-SYSNAME = P_SYSNAME.                         " This instance SID
     LT_SM50-SYSNR = P_SYSNR.                             " This instance system number
     LT_SM50-WP_NO = L_WPLIST-WP_NO.                      " Work process number
-    LT_SM50-WP_TYPE = L_WPLIST-WP_TYP.                  " Work process type
+    LT_SM50-WP_TYPE = L_WPLIST-WP_TYP.                   " Work process type
     LT_SM50-WP_PID = L_WPLIST-WP_PID.                    " Work process PID
-    LT_SM50-WP_STATUS = L_WPLIST-WP_STATUS.                 " Work process status
+    LT_SM50-WP_STATUS = L_WPLIST-WP_STATUS.              " Work process status
+    LT_SM50-WP_WAITING = L_WPLIST-WP_WAITING.            " Work process reason for waiting
     LT_SM50-WP_DUMPS = L_WPLIST-WP_DUMPS.                " Number of error dumps
     LT_SM50-WP_MANDT = L_WPLIST-WP_MANDT.                " Client executing on
     LT_SM50-WP_BNAME = L_WPLIST-WP_BNAME.                " User that is executing
     LT_SM50-WP_REPORT = L_WPLIST-WP_REPORT.              " Report being executed
-    LT_SM50-WP_ELTIME = L_WPLIST-WP_ELTIME.                 " Elapsed time of execution
+    LT_SM50-WP_ELTIME = L_WPLIST-WP_ELTIME.              " Elapsed time of execution
     LT_SM50-WP_ACTION = L_WPLIST-WP_ACTION.              " Current execution activity
     LT_SM50-WP_TABLE = L_WPLIST-WP_TABLE.                " Table being operated on
 

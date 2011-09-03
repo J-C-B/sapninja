@@ -1,0 +1,61 @@
+FUNCTION ZPLUNK_NSLOOKUP.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     VALUE(HOSTNAME) TYPE  SXPGCOLIST-PARAMETERS
+*"  EXPORTING
+*"     REFERENCE(IPADDRESS) TYPE  ZPLUNK_TXT255
+*"----------------------------------------------------------------------
+* ----------------------------------------------------------------------
+* Version 1.02
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* ----------------------------------------------------------------------
+* Change Log:
+* ----------
+*   Date       Issue #  Issue Link
+* -----------  -------  ------------------------
+*
+*--------------------------------------------------------------------------------
+  DATA: T_EXEC_PROTOCOL LIKE BTCXPM OCCURS 0 WITH HEADER LINE.
+  DATA: L_START LIKE SY-FDPOS.
+  DATA: L_LEN LIKE SY-FDPOS.
+
+  IF SY-OPSYS+0(2) = 'WN' OR SY-OPSYS+0(7) = 'Windows'.
+    CONCATENATE '-n 1' HOSTNAME INTO HOSTNAME SEPARATED BY SPACE.
+  ELSE.
+    CONCATENATE '-nc1' HOSTNAME INTO HOSTNAME SEPARATED BY SPACE.
+  ENDIF.
+  IPADDRESS = '0.0.0.0'.
+   CALL FUNCTION 'SXPG_COMMAND_EXECUTE' IN UPDATE TASK
+     EXPORTING
+       COMMANDNAME           = 'PING'
+       ADDITIONAL_PARAMETERS = HOSTNAME
+       OPERATINGSYSTEM       = 'ANYOS'
+       STDOUT                = 'X'
+       STDERR                = 'X'
+       TERMINATIONWAIT       = 'X'
+     TABLES
+       EXEC_PROTOCOL         = T_EXEC_PROTOCOL.
+   LOOP AT T_EXEC_PROTOCOL.
+     SEARCH T_EXEC_PROTOCOL-MESSAGE FOR 'FROM '.
+     IF SY-FDPOS > 0.
+       L_START = SY-FDPOS + 5.
+       SEARCH T_EXEC_PROTOCOL-MESSAGE FOR ':'.
+       IF SY-FDPOS > 0 AND SY-FDPOS > L_START.
+         L_LEN = SY-FDPOS - L_START.
+         IPADDRESS = T_EXEC_PROTOCOL-MESSAGE+L_START(L_LEN).
+       ENDIF.
+     ENDIF.
+   ENDLOOP.
+ENDFUNCTION.

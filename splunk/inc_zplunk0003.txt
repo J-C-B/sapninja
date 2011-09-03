@@ -2,19 +2,27 @@
 *&  Include           ZPLUNK0003 - SM04 User List
 *&---------------------------------------------------------------------*
 * ----------------------------------------------------------------------
+* Version 1.02
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
-* 
+*
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-* 
+*
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ----------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+* Change Log:
+* ----------
+*   Date       Issue #  Issue Link
+* -----------  -------  ------------------------
+*
+*--------------------------------------------------------------------------------
 FORM SM04_USER USING P_HOST P_SYSNAME P_SYSNR.
   TABLES USR02.
   DATA: LT_SM04USR TYPE ZPLUNK_SM04USR.

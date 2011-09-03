@@ -1,3 +1,9 @@
+FUNCTION ZPLUNK_FORMAT_SIGN .
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  CHANGING
+*"     VALUE(VALUE) TYPE  CLIKE
+*"----------------------------------------------------------------------
 * ----------------------------------------------------------------------
 * Version 1.02
 * This program is free software: you can redistribute it and/or modify
@@ -13,13 +19,22 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ----------------------------------------------------------------------
+* ----------------------------------------------------------------------
 * Change Log:
 * ----------
 *   Date       Issue #  Issue Link
 * -----------  -------  ------------------------
 *
 *--------------------------------------------------------------------------------
-METHOD KEYPAIRT.
-   RESULT = ''.
-   CONCATENATE KEY '='  VALUE INTO RESULT.
-ENDMETHOD.
+  DATA: TEXT1(1) TYPE C.
+
+  SEARCH VALUE FOR '-'.
+  IF SY-SUBRC = 0 AND SY-FDPOS <> 0.
+    SPLIT VALUE AT '-' INTO VALUE TEXT1.
+    CONDENSE VALUE.
+    CONCATENATE '-' VALUE INTO VALUE.
+  ELSE.
+    CONDENSE VALUE.
+  ENDIF.
+
+ENDFUNCTION.

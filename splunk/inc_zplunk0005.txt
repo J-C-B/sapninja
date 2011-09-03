@@ -2,21 +2,30 @@
 *&  Include           ZPLUNK0005 - ST03N Write
 *&---------------------------------------------------------------------*
 * ----------------------------------------------------------------------
+* Version 1.02
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
-* 
+*
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-* 
+*
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * ----------------------------------------------------------------------
+*--------------------------------------------------------------------------------
+* Change Log:
+* ----------
+*   Date       Issue #  Issue Link
+* -----------  -------  ------------------------
+*  4 Sep 2011        2  http://code.google.com/p/sapninja/issues/detail?id=2
+*--------------------------------------------------------------------------------
 FORM WRITE_ZPLUNK_ST03N USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
   TABLES: ZPLUNK_ST03N.
+
   DATA: LT_ST03N TYPE ZPLUNK_ST03N.
 
   WRITE:/ 'Collecting ... ST03 Workload Overview'.
@@ -83,7 +92,9 @@ ENDFORM.                    "WRITE_ZPLUNK_ST03N
 *----------------------------------------------------------------------*
 FORM WRITE_ZPLUNK_ST03N_FE USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
   TABLES: ZPLUNK_ST03N_FE.
-  DATA: LT_ST03N_FE TYPE ZPLUNK_ST03N_FE.
+  DATA: LT_ST03N_FE TYPE ZPLUNK_ST03N_FE,
+        L_IPADDRESS TYPE ZPLUNK_TXT255,
+        L_HOSTNAME  TYPE SXPGCOLIST-PARAMETERS.
 
   WRITE:/ 'Collecting ... ST03 Frontends'.
   LOOP AT L_FRONTEND.
@@ -93,33 +104,50 @@ FORM WRITE_ZPLUNK_ST03N_FE USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
     LT_ST03N_FE-HOST = P_HOST.                              " This instance host name
     LT_ST03N_FE-SYSNAME = P_SYSNAME.                        " This instance SID
     LT_ST03N_FE-SYSNR = P_SYSNR.                            " This instance system number
-    LT_ST03N_FE-PHOST = L_FRONTEND-PHOST.              " Frontend Name
+    LT_ST03N_FE-PHOST = L_FRONTEND-PHOST.                   " Frontend Name
+* Get the IP Address
+* Sometimes the value of PHOST is already an IP address.  Check this out first.
+    FIND REGEX '\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b' IN L_FRONTEND-PHOST.
+    IF SY-SUBRC EQ 0.
+      L_IPADDRESS =  L_FRONTEND-PHOST.
+    ELSEIF L_FRONTEND-PHOST = ''.
+      L_IPADDRESS = ''.
+    ELSE.
+* Otherwise, lookup the IP address from the terminal hostname
+      L_HOSTNAME = L_FRONTEND-PHOST.
+      CALL FUNCTION 'ZPLUNK_NSLOOKUP'
+        EXPORTING
+          HOSTNAME  = L_HOSTNAME
+        IMPORTING
+          IPADDRESS = L_IPADDRESS.
+    ENDIF.
+    LT_ST03N_FE-IPADDR = L_IPADDRESS.         " Frontend IP Address
     LT_ST03N_FE-STEPS = L_FRONTEND-COUNT.
-               " Number of dialog steps
-LT_ST03N_FE-BYTESIN = L_FRONTEND-BYTESIN.
-               " Bytes from frontend to application server
-LT_ST03N_FE-BYTESOUT = L_FRONTEND-BYTESOUT.
-             " Bytes from application server to frontend
-LT_ST03N_FE-GUITIME = L_FRONTEND-GUITIME.
-               " Total GUI Time per Dialog Step (ms)
-LT_ST03N_FE-GUICNT = L_FRONTEND-GUICNT.
-               " Number of Roundtrips
-LT_ST03N_FE-GUINETTIME = L_FRONTEND-GUINETTIME.
-             " Total Frontend Network Time (ms)
+    " Number of dialog steps
+    LT_ST03N_FE-BYTESIN = L_FRONTEND-BYTESIN.
+    " Bytes from frontend to application server
+    LT_ST03N_FE-BYTESOUT = L_FRONTEND-BYTESOUT.
+    " Bytes from application server to frontend
+    LT_ST03N_FE-GUITIME = L_FRONTEND-GUITIME.
+    " Total GUI Time per Dialog Step (ms)
+    LT_ST03N_FE-GUICNT = L_FRONTEND-GUICNT.
+    " Number of Roundtrips
+    LT_ST03N_FE-GUINETTIME = L_FRONTEND-GUINETTIME.
+    " Total Frontend Network Time (ms)
 
-SELECT * FROM ZPLUNK_ST03N_FE
-WHERE SAMPLEDATE = LT_ST03N_FE-SAMPLEDATE AND
-SAMPLETIME = LT_ST03N_FE-SAMPLETIME AND
-HOST = LT_ST03N_FE-HOST AND
-SYSNAME = LT_ST03N_FE-SYSNAME AND
-SYSNR = LT_ST03N_FE-SYSNR AND
-      PHOST = LT_ST03N_FE-PHOST.
-  ENDSELECT.
-  IF SY-SUBRC NE 0.
-    INSERT INTO ZPLUNK_ST03N_FE VALUES LT_ST03N_FE.
-  ENDIF.
-ENDLOOP.
-COMMIT WORK.
+    SELECT * FROM ZPLUNK_ST03N_FE
+    WHERE SAMPLEDATE = LT_ST03N_FE-SAMPLEDATE AND
+    SAMPLETIME = LT_ST03N_FE-SAMPLETIME AND
+    HOST = LT_ST03N_FE-HOST AND
+    SYSNAME = LT_ST03N_FE-SYSNAME AND
+    SYSNR = LT_ST03N_FE-SYSNR AND
+          PHOST = LT_ST03N_FE-PHOST.
+    ENDSELECT.
+    IF SY-SUBRC NE 0.
+      INSERT INTO ZPLUNK_ST03N_FE VALUES LT_ST03N_FE.
+    ENDIF.
+  ENDLOOP.
+  COMMIT WORK.
 ENDFORM.                    " WRITE_ZPLUNK_ST03N_FE
 
 FORM WRITE_ZPLUNK_ST03N_TRN USING P_DATEL P_TIMEL P_HOST P_SYSNAME P_SYSNR.
