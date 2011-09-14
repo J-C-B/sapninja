@@ -2,7 +2,7 @@
 *&  Include           ZPLUNK0007 - SM21 System Log
 *&---------------------------------------------------------------------*
 * ----------------------------------------------------------------------
-* Version 1.02
+* Version 1.03
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -21,7 +21,7 @@
 * ----------
 *   Date       Issue #  Issue Link
 * -----------  -------  ------------------------
-*
+* 14 Sep 2011        9  http://code.google.com/p/sapninja/issues/detail?id=9
 *--------------------------------------------------------------------------------
 FORM ZPLUNK_SM21.
   DATA: CPU_ID(8),
@@ -95,6 +95,9 @@ FORM ZPLUNK_SM21.
     APPEND  'ENDFORM.' TO MTAB_PROGRAM_SOURCE.
     MODIFY MTAB_PROGRAM_SOURCE INDEX 1 FROM 'PROGRAM ZPLUNKSAPMSM21 MESSAGE-ID SL NO STANDARD PAGE HEADING.'.
     MODIFY MTAB_PROGRAM_SOURCE INDEX 2 FROM ''.
+    MODIFY MTAB_PROGRAM_SOURCE INDEX 3 FROM ''.
+    MODIFY MTAB_PROGRAM_SOURCE INDEX 4 FROM ''.
+    MODIFY MTAB_PROGRAM_SOURCE INDEX 5 FROM ''.
     INSERT REPORT 'ZPLUNKSAPMSM21' FROM MTAB_PROGRAM_SOURCE.
 
 * Update the parameter indicating success
