@@ -10,6 +10,7 @@ FUNCTION ZPLUNK_GET .
 * Version 1.02
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
+* it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
@@ -46,18 +47,8 @@ FUNCTION ZPLUNK_GET .
         L_LOGLINE(1000) TYPE C,
         L_TOKEN TYPE ZPLUNK_TXT255,
         L_VALUE TYPE ZPLUNK_TXT255,
-        L_NVALUE(20),
         L_IDX TYPE I,
-        IPX1 TYPE X,
-        IPX2 TYPE X,
-        IPX3 TYPE X,
-        IPX4 TYPE X,
-        IPI1(3) TYPE N,
-        IPI2(3) TYPE N,
-        IPI3(3) TYPE N,
-        IPI4(3) TYPE N,
-        L_HOSTNAME TYPE SXPGCOLIST-PARAMETERS,
-        L_IPADDRESS TYPE ZPLUNK_TXT255,
+        L_NVALUE(20),
         L_CHUNK1(100),
         L_CHUNK2(100).
 
@@ -1520,47 +1511,7 @@ FUNCTION ZPLUNK_GET .
             RESULT = L_TOKEN.
         CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
         " Frontend IP Address
-* Sometimes the value of PHOST is already an IP address.  Check this out first.
-        FIND REGEX '\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b' IN L_ZPLUNK_ST03N_FE-PHOST.
-        IF SY-SUBRC EQ 0.
-          L_VALUE = L_ZPLUNK_ST03N_FE-PHOST.
-        ELSE.
-* Otherwise, lookup the IP address from the terminal hostname
-          IPX1 = L_VALUE+0(2).
-          IPI1 = IPX1.
-          SHIFT IPI1 LEFT DELETING LEADING '0'.
-          IF IPI1 EQ ''.
-            IPI1 = '0'.
-          ENDIF.
-          IPX2 = L_VALUE+2(2).
-          IPI2 = IPX2.
-          SHIFT IPI2 LEFT DELETING LEADING '0'.
-          IF IPI2 EQ ''.
-            IPI2 = '0'.
-          ENDIF.
-          IPX3 = L_VALUE+4(2).
-          IPI3 = IPX3.
-          SHIFT IPI3 LEFT DELETING LEADING '0'.
-          IF IPI3 EQ ''.
-            IPI3 = '0'.
-          ENDIF.
-          IPX4 = L_VALUE+6(2).
-          IPI4 = IPX4.
-          SHIFT IPI4 LEFT DELETING LEADING '0'.
-          IF IPI4 EQ ''.
-            IPI4 = '0'.
-          ENDIF.
-          CONCATENATE IPI1 IPI2 IPI3 IPI4 INTO L_VALUE SEPARATED BY '.'.
-          IF L_VALUE = '000.000.000.000'.
-            L_HOSTNAME = L_ZPLUNK_ST03N_FE-PHOST.
-            CALL FUNCTION 'ZPLUNK_NSLOOKUP'
-              EXPORTING
-                HOSTNAME  = L_HOSTNAME
-              IMPORTING
-                IPADDRESS = L_IPADDRESS.
-            L_VALUE = L_IPADDRESS.
-          ENDIF.
-        ENDIF.
+        L_VALUE = L_ZPLUNK_ST03N_FE-IPADDR.
         CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
           EXPORTING
             KEY    = 'ipaddr'
@@ -1656,7 +1607,6 @@ FUNCTION ZPLUNK_GET .
               SYSNR = L_ZPLUNK_ST03N_FE-SYSNR AND
               PHOST = L_ZPLUNK_ST03N_FE-PHOST.
       ENDSELECT.
-
     WHEN 'ZPLUNK_SM50'.
       L_IDX = 0.
 * Load the latest records into an internal table
