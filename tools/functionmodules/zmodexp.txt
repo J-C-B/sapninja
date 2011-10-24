@@ -12,6 +12,7 @@ FUNCTION ZMODEXP .
 * Compute ( BASE ^ KEY ) MOD MODULUS for large prime numbers suitable for
 * RSA encryption.  See description at http://en.wikipedia.org/wiki/RSA
 * Copyright (C) 2011  Cooke Computing Pty Ltd
+* Author: Jim Cooke (Australia)
 * 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by

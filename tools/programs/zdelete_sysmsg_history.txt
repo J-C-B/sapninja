@@ -1,6 +1,7 @@
 * ----------------------------------------------------------------------
 * Forcing SM02 messages to lose display history, making them pop up each log in time.
 * Copyright (C) 2011  Cooke Computing Pty Ltd
+* Author: Jim Cooke (Australia)
 * 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
