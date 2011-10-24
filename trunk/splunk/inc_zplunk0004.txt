@@ -2,6 +2,8 @@
 *&  Include           ZPLUNK0004 - SM04 Memory List
 *&---------------------------------------------------------------------*
 * ----------------------------------------------------------------------
+* Copyright (C) 2011  Cooke Computing Pty Ltd
+* Author: Jim Cooke (Australia)
 * Version 1.02
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
