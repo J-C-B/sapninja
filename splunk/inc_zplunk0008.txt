@@ -23,7 +23,7 @@
 * ----------
 *   Date       Issue #  Issue Link
 * -----------  -------  ------------------------
-*
+*  2 Nov 2011       16  http://code.google.com/p/sapninja/issues/detail?id=16
 *--------------------------------------------------------------------------------
 DATA: L_OUT_TID             LIKE ALGLOBTID OCCURS 0 WITH HEADER LINE,
       L_OUT_TYPEDEF_RC      LIKE ALTDEFRC OCCURS 0 WITH HEADER LINE,
@@ -150,7 +150,7 @@ FORM ZPLUNK_CCMS_C.
       L_MTE_TID-MTUID      = <l>-MTUID.
       L_MTE_TID-MTCLASS    = <l>-MTCLASS.
       L_MTE_TID-MTINDEX    = <l>-MTINDEX.
-      SEARCH L_MTE_TID-MTMCNAME FOR SY-HOST.
+     SEARCH L_MTE_TID-MTMCNAME FOR SY-HOST.
       IF SY-SUBRC NE 0.
         CONTINUE.
       ENDIF.
@@ -163,6 +163,7 @@ FORM ZPLUNK_CCMS_C.
       L_PR_TID-MTUID      = <l>-MTUID.
       L_PR_TID-MTCLASS    = <l>-MTCLASS.
       L_PR_TID-MTINDEX    = <l>-MTINDEX.
+      L_PR_TID-EXTINDEX   = <l>-EXTINDEX.
       APPEND L_PR_TID.
       CALL FUNCTION 'SALC_PERF_READ'
         EXPORTING
@@ -222,18 +223,9 @@ FORM ZPLUNK_CCMS_C.
         ENDIF.
       ENDIF.
 
-      SPLIT L_ALERTRC-MSEGNAME AT '_' INTO L_CHUNK1 L_CHUNK2 L_CHUNK3 L_CHUNK4 L_CHUNK5.
-      L_CCMS_C-SAMPLEDATE = L_DATEL.
-      L_CCMS_C-SAMPLETIME = L_TIMEL.
-      IF L_CHUNK3 NE SY-HOST OR L_CHUNK4 NE SY-SYSID.  " Some MTES are system-wide and not node-specific
-        L_CCMS_C-HOST       = L_CI_HOST.
-        L_CCMS_C-SYSNAME    = L_CI_SYSID.
-        L_CCMS_C-SYSNR      = L_CI_SYSNR.
-      ELSE.
-        L_CCMS_C-HOST       = L_CHUNK3.
-        L_CCMS_C-SYSNAME    = L_CHUNK4.
-        L_CCMS_C-SYSNR      = L_CHUNK5.
-      ENDIF.
+      L_CCMS_C-SAMPLEDATE      = L_DATEL.
+      L_CCMS_C-SAMPLETIME      = L_TIMEL.
+      L_CCMS_C-HOST            = SY-HOST.
       L_CCMS_C-MTECLASS        = L_ZPLUNK_CCMS_MTES-MTECLASS.
       L_CCMS_C-SENT            = ' '.
       L_CCMS_C-OBSERVATION     = L_PR_RET-ALRELEVVAL.
