@@ -7,8 +7,6 @@ FUNCTION ZPLUNK_GET .
 *"     VALUE(RESULT) TYPE  STRINGTAB
 *"----------------------------------------------------------------------
 * ----------------------------------------------------------------------
-* Copyright (C) 2011  Cooke Computing Pty Ltd
-* Author: Jim Cooke (Australia)
 * Version 1.02
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -34,6 +32,7 @@ FUNCTION ZPLUNK_GET .
 *  3 Sep 2011        6  http://code.google.com/p/sapninja/issues/detail?id=6
 * 20 Oct 2011        7  http://code.google.com/p/sapninja/issues/detail?id=7
 * 20 Oct 2011       13  http://code.google.com/p/sapninja/issues/detail?id=13
+* 10 Nov 2011       18  http://code.google.com/p/sapninja/issues/detail?id=18
 *--------------------------------------------------------------------------------
   IF DATASET = 'ZPLUNK_TASKTYPE'.
     DATASET = 'ZPLUNK_ST03N_WORKLOAD'.
@@ -482,7 +481,6 @@ FORM ZPLUNK_ST03N_WORKLOAD CHANGING RESULT TYPE STRINGTAB.
         RESULT = L_TOKEN.
     CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
     INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
-
   ENDLOOP.
 
   LOOP AT L_ZPLUNK_ST03N.
@@ -1186,6 +1184,7 @@ FORM ZPLUNK_CCMS_A CHANGING RESULT TYPE STRINGTAB.
       IMPORTING
         RESULT = L_TOKEN.
     CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+    INSERT L_LOGLINE INTO RESULT INDEX L_IDX.
   ENDLOOP.
 
   LOOP AT L_ZPLUNK_CCMS_A.
@@ -1214,8 +1213,11 @@ FORM ZPLUNK_CCMS_C CHANGING RESULT TYPE STRINGTAB.
         L_LOGLINE(1000) TYPE C,
         L_TOKEN TYPE ZPLUNK_TXT255,
         L_VALUE TYPE ZPLUNK_TXT255,
+        L_NVALUE(20),
         L_IDX TYPE I,
-        L_NVALUE(20).
+        L_IX TYPE INT2,
+        L_OFFSET TYPE INT2,
+        L_LEN TYPE INT2.
 
   L_IDX = 0.
 * Load the latest records into an internal table
@@ -1256,6 +1258,15 @@ FORM ZPLUNK_CCMS_C CHANGING RESULT TYPE STRINGTAB.
     CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
       EXPORTING
         KEY    = 'sysnr'
+        VALUE  = L_VALUE
+      IMPORTING
+        RESULT = L_TOKEN.
+    CONCATENATE L_LOGLINE TEXT-001 L_TOKEN INTO L_LOGLINE.
+    " MTEFULLCLASS
+    L_VALUE = L_ZPLUNK_CCMS_C-MTEFULLCLASS.
+    CALL METHOD ZPLUNK_COMMON=>KEYPAIRT
+      EXPORTING
+        KEY    = 'mtefullclass'
         VALUE  = L_VALUE
       IMPORTING
         RESULT = L_TOKEN.

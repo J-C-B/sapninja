@@ -24,6 +24,7 @@
 *   Date       Issue #  Issue Link
 * -----------  -------  ------------------------
 *  2 Nov 2011       16  http://code.google.com/p/sapninja/issues/detail?id=16
+* 10 Nov 2011       18  http://code.google.com/p/sapninja/issues/detail?id=18
 *--------------------------------------------------------------------------------
 DATA: L_OUT_TID             LIKE ALGLOBTID OCCURS 0 WITH HEADER LINE,
       L_OUT_TYPEDEF_RC      LIKE ALTDEFRC OCCURS 0 WITH HEADER LINE,
@@ -48,6 +49,9 @@ DATA: L_OUT_TID             LIKE ALGLOBTID OCCURS 0 WITH HEADER LINE,
       L_MTE_TID             LIKE ALALERTRC OCCURS 0 WITH HEADER LINE,
       L_PR_TID              LIKE ALGLOBTID OCCURS 0 WITH HEADER LINE,
       L_PR_RET              LIKE ALPERFTYPE OCCURS 0 WITH HEADER LINE,
+      L_TMP_PR_TID          LIKE ALGLOBTID OCCURS 0 WITH HEADER LINE,
+      L_TMP_PR_RET          LIKE ALMTEI_RC OCCURS 0 WITH HEADER LINE,
+      L_TMP_LONGNAME        LIKE ALGTIDLNRC OCCURS 0 WITH HEADER LINE,
       L_TID                 TYPE ALTIDTBL,
       L_TID_VISI_MAXLEVEL   TYPE ALTIDMLTBL,
       L_ALERTS              TYPE ALALERTS,
@@ -71,7 +75,8 @@ DATA: L_OUT_TID             LIKE ALGLOBTID OCCURS 0 WITH HEADER LINE,
 TABLES: ZPLUNK_CCMS_A, ZPLUNK_CCMS_C.
 
 FIELD-SYMBOLS:
-      <l>                   LIKE LINE OF L_TID.
+      <l>                   LIKE LINE OF L_TID,
+      <t>                   LIKE LINE OF L_TMP_LONGNAME.
 
 *&---------------------------------------------------------------------*
 *&      Form  ZPLUNK_CCMS_C
@@ -80,6 +85,16 @@ FIELD-SYMBOLS:
 *----------------------------------------------------------------------*
 FORM ZPLUNK_CCMS_C.
   WRITE:/ 'Collecting ... CCMS Monitor Current Status'.
+
+* Only execute this from the central instance
+  L_CHUNK1 = L_CI_HOST.
+  L_CHUNK2 = SY-HOST.
+  TRANSLATE L_CHUNK1 TO UPPER CASE.
+  TRANSLATE L_CHUNK2 TO UPPER CASE.
+  IF L_CHUNK1 <> L_CHUNK2.
+    WRITE:/ 'CCMS Current capture is only done on the central instance ... skipping'.
+    EXIT.
+  ENDIF.
 
 * Load the MTE class names into an internal table
   REFRESH L_MTE_TID.
@@ -150,10 +165,6 @@ FORM ZPLUNK_CCMS_C.
       L_MTE_TID-MTUID      = <l>-MTUID.
       L_MTE_TID-MTCLASS    = <l>-MTCLASS.
       L_MTE_TID-MTINDEX    = <l>-MTINDEX.
-     SEARCH L_MTE_TID-MTMCNAME FOR SY-HOST.
-      IF SY-SUBRC NE 0.
-        CONTINUE.
-      ENDIF.
       APPEND L_MTE_TID.
 
       REFRESH L_PR_TID.
@@ -167,7 +178,7 @@ FORM ZPLUNK_CCMS_C.
       APPEND L_PR_TID.
       CALL FUNCTION 'SALC_PERF_READ'
         EXPORTING
-          ONLY_LOCAL    = 'X'
+          ONLY_LOCAL    = ' '
           BYPASS_CACHE  = 'X'
         TABLES
           TID           = L_PR_TID
@@ -179,6 +190,7 @@ FORM ZPLUNK_CCMS_C.
         CONTINUE.
       ENDIF.
 
+* Only gather alerts that have numerical values that can be judged by a threshold
       READ TABLE L_PR_RET INDEX 1.
       IF L_PR_RET-THRESHDIR NE 1 AND L_PR_RET-THRESHDIR NE 2.  " Note which alerts are threshold-based
         L_ZPLUNK_CCMS_MTES-THRESHOLD_ACTIVE = 'N'.
@@ -223,22 +235,67 @@ FORM ZPLUNK_CCMS_C.
         ENDIF.
       ENDIF.
 
+* Because we only gather the current MTE values on the central instance, may of the MTEs will be from other application servers or remote systems.
+* We need to return the fully unique pathname for this MTE.  For example, you will have multiple servers reporting CPU usage data.  The MTECLASS name needs to be unique in this case
+      REFRESH L_TMP_PR_TID.
+      L_TMP_PR_TID-MTSYSID    = L_PR_TID-MTSYSID.
+      L_TMP_PR_TID-MTMCNAME   = L_PR_TID-MTMCNAME.
+      L_TMP_PR_TID-MTNUMRANGE = L_PR_TID-MTNUMRANGE.
+      L_TMP_PR_TID-MTUID      = L_PR_TID-MTUID.
+      L_TMP_PR_TID-MTCLASS    = L_PR_TID-MTCLASS.
+      L_TMP_PR_TID-MTINDEX    = L_PR_TID-MTINDEX.
+      L_TMP_PR_TID-EXTINDEX   = L_PR_TID-EXTINDEX.
+      APPEND L_TMP_PR_TID.
+
+      CALL FUNCTION 'SALC_MT_GET_MTEINFO'
+        TABLES
+          TID           = L_TMP_PR_TID
+          MTEINFO       = L_TMP_PR_RET
+          LONGNAME      = L_TMP_LONGNAME
+        EXCEPTIONS
+          C_CALL_FAILED = 1.
+      IF SY-SUBRC EQ 0.
+        LOOP AT L_TMP_LONGNAME ASSIGNING <t>.
+          L_CCMS_C-MTEFULLCLASS = <t>-ALMTFULLNM.
+        ENDLOOP.
+      ELSE.
+        L_CCMS_C-MTEFULLCLASS = L_ZPLUNK_CCMS_MTES-MTECLASS.
+      ENDIF.
+* Extract the hostname for this mte.
+      CONCATENATE '_' SY-SYSID '_' INTO L_CHUNK1.
+      IF L_CCMS_C-HOST = ''.
+        SEARCH L_PR_TID-MTMCNAME FOR L_CHUNK1.
+        IF SY-SUBRC EQ 0.
+          L_CCMS_C-HOST = L_PR_TID-MTMCNAME+0(SY-FDPOS).
+        ELSE.
+* Some alerts are "system-wide" and do not have a host name associated with them.  In this case, assign the central instance hostname
+          IF L_PR_TID-MTMCNAME = 'Background' OR
+             L_PR_TID-MTMCNAME = 'Spool' OR
+             L_PR_TID-MTMCNAME = 'System Configuration'.
+            L_CCMS_C-HOST = L_CI_HOST.
+          ELSE.
+            L_CCMS_C-HOST = L_PR_TID-MTMCNAME.
+          ENDIF.
+        ENDIF.
+      ENDIF.
+
       L_CCMS_C-SAMPLEDATE      = L_DATEL.
       L_CCMS_C-SAMPLETIME      = L_TIMEL.
-      L_CCMS_C-HOST            = SY-HOST.
-      L_CCMS_C-MTECLASS        = L_ZPLUNK_CCMS_MTES-MTECLASS.
+      L_CCMS_C-SYSNAME         = L_CI_SYSID.
+      L_CCMS_C-SYSNR           = L_CI_SYSNR.
       L_CCMS_C-SENT            = ' '.
+      L_CCMS_C-MTECLASS = L_ZPLUNK_CCMS_MTES-MTECLASS.
       L_CCMS_C-OBSERVATION     = L_PR_RET-ALRELEVVAL.
       L_CCMS_C-OBSERVATION_UOM = L_PR_RET-VALUNIT.
       CONDENSE L_CCMS_C-MSG.
 
       SELECT * FROM ZPLUNK_CCMS_C
-      WHERE SAMPLEDATE = L_CCMS_C-SAMPLEDATE AND
-            SAMPLETIME = L_CCMS_C-SAMPLETIME AND
-            HOST       = L_CCMS_C-HOST AND
-            SYSNAME    = L_CCMS_C-SYSNAME AND
-            SYSNR      = L_CCMS_C-SYSNR AND
-            MTECLASS   = L_CCMS_C-MTECLASS.
+      WHERE SAMPLEDATE   = L_CCMS_C-SAMPLEDATE AND
+            SAMPLETIME   = L_CCMS_C-SAMPLETIME AND
+            HOST         = L_CCMS_C-HOST AND
+            SYSNAME      = L_CCMS_C-SYSNAME AND
+            SYSNR        = L_CCMS_C-SYSNR AND
+            MTEFULLCLASS = L_CCMS_C-MTEFULLCLASS.
       ENDSELECT.
       IF SY-SUBRC NE 0.
         INSERT INTO ZPLUNK_CCMS_C VALUES L_CCMS_C.
@@ -291,8 +348,8 @@ FORM ZPLUNK_CCMS_A.
 
   OPEN DATASET L_FNAME FOR INPUT IN TEXT MODE ENCODING DEFAULT WITH SMART LINEFEED.
   IF SY-SUBRC NE 0.
-     WRITE: / 'No alert file found'.
-     EXIT.
+    WRITE: / 'No alert file found'.
+    EXIT.
   ENDIF.
   DO.
     READ DATASET L_FNAME INTO L_BUFFER.
