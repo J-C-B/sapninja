@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-16"?>
+<nugget name="ZNINJA_RSA">
+ <CLAS CLSNAME="ZNINJA_RSA_CLASS" VERSION="1" LANGU="E" DESCRIPT="RSA Encryption Class Methods" UUID="000C29F8B16C1EE19CAD3FF49C2AEA74" CATEGORY="00" EXPOSURE="2" STATE="1" RELEASE="0" AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" CHGDANYON="00000000" CLSFINAL="X" CLSCCINCL="X" FIXPT="X" UNICODE="X" R3RELEASE="702" CLSBCCAT="00" DURATION_TYPE="0 " RISK_LEVEL="0 ">
+  <publicSection>class ZNINJA_RSA_CLASS definition
+  public
+  final
+  create public .
+
+public section.
+*&quot;* public components of class ZNINJA_RSA_CLASS
+*&quot;* do not include other source files here!!!
+
+  class-methods BIN2DEC
+    importing
+      value(BINNUM) type ZNINJA_RSA_CHAR_30
+    exporting
+      value(DECNUM) type ZNINJA_RSA_QUAN_15_0 .
+  class-methods DEC2BIN
+    importing
+      value(DECNUM) type ZNINJA_RSA_QUAN_15_0
+    exporting
+      value(BINNUM) type ZNINJA_RSA_CHAR_30 .
+  class-methods MODEXP
+    importing
+      value(BASE) type ZNINJA_RSA_QUAN_15_0
+      value(KEY) type ZNINJA_RSA_QUAN_15_0
+      value(MODULUS) type ZNINJA_RSA_QUAN_15_0
+    exporting
+      value(RESULT) type ZNINJA_RSA_QUAN_15_0 .</publicSection>
+  <protectedSection>protected section.
+*&quot;* protected components of class ZNINJA_RSA_CLASS
+*&quot;* do not include other source files here!!!</protectedSection>
+  <privateSection>private section.
+*&quot;* private components of class ZNINJA_RSA_CLASS
+*&quot;* do not include other source files here!!!</privateSection>
+  <localImplementation>*&quot;* use this source file for the definition and implementation of
+*&quot;* local helper classes, interface definitions and type
+*&quot;* declarations</localImplementation>
+  <localTypes>*&quot;* use this source file for any type of declarations (class
+*&quot;* definitions, interfaces or type declarations) you need for
+*&quot;* components in the private section</localTypes>
+  <localMacros>*&quot;* use this source file for any macro definitions you need
+*&quot;* in the implementation part of the class</localMacros>
+  <method CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="BIN2DEC" VERSION="1" LANGU="E" DESCRIPT="Convert binary to decimal" EXPOSURE="2" STATE="1" EDITORDER="1 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" MTDTYPE="0" MTDDECLTYP="1" R3RELEASE="702" BCMTDCAT="00" BCMTDSYN="0">
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="BIN2DEC" SCONAME="BINNUM" VERSION="1" LANGU="E" DESCRIPT="CHAR data element with 30 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="1 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_CHAR_30"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="BIN2DEC" SCONAME="DECNUM" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="2 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="1" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <source>method BIN2DEC.
+* ----------------------------------------------------------------------
+* Convert binary number to decimal.
+* Copyright (C) 2011
+* Author: Jim Cooke (Australia)
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+* ----------------------------------------------------------------------
+  DATA: BIT TYPE I,
+        POW TYPE I,
+        IDX TYPE I.
+  CONDENSE BINNUM NO-GAPS.
+  DECNUM = 0.
+  POW = 0.
+  IDX = STRLEN( BINNUM ) - 1.
+  DO.
+    BIT = BINNUM+IDX(1).
+    DECNUM = DECNUM + ( BIT * ( 2 ** POW ) ).
+    POW = POW + 1.
+    IDX = IDX - 1.
+    IF IDX &lt; 0.
+      EXIT.
+    ENDIF.
+  ENDDO.
+endmethod.</source>
+  </method>
+  <method CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="DEC2BIN" VERSION="1" LANGU="E" DESCRIPT="Convert decimal to binary" EXPOSURE="2" STATE="1" EDITORDER="2 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" MTDTYPE="0" MTDDECLTYP="1" R3RELEASE="702" BCMTDCAT="00" BCMTDSYN="0">
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="DEC2BIN" SCONAME="DECNUM" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="1 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="DEC2BIN" SCONAME="BINNUM" VERSION="1" LANGU="E" DESCRIPT="CHAR data element with 30 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="2 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="1" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_CHAR_30"/>
+   <source>method DEC2BIN.
+* ----------------------------------------------------------------------
+* Convert decimal number to binary.
+* Copyright (C) 2011
+* Author: Jim Cooke (Australia)
+* Contributors:  David Henn (04/01/2012)
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+* ----------------------------------------------------------------------
+  DATA BUFFER TYPE STRING.
+  DATA BIT TYPE C.
+  DATA L_DECNUM LIKE DECNUM.
+  L_DECNUM = DECNUM.
+
+  DO.
+    CLEAR BIT.
+    BIT = L_DECNUM MOD 2.
+    L_DECNUM = L_DECNUM DIV 2.
+    CONCATENATE BIT BUFFER INTO BUFFER.
+    IF L_DECNUM = 0.
+      EXIT.
+    ENDIF.
+  ENDDO.
+  BINNUM = BUFFER.
+endmethod.</source>
+  </method>
+  <method CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" VERSION="1" LANGU="E" DESCRIPT="RSA modular exponentiation function" EXPOSURE="2" STATE="1" EDITORDER="3 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" MTDTYPE="0" MTDDECLTYP="1" R3RELEASE="702" BCMTDCAT="00" BCMTDSYN="0">
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" SCONAME="BASE" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="1 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" SCONAME="KEY" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="2 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" SCONAME="MODULUS" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="3 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" SCONAME="RESULT" VERSION="1" LANGU="E" DESCRIPT="CHAR data element with 30 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="4 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDBY="SAPNINJA" CHANGEDON="20120319" PARDECLTYP="1" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <source>method MODEXP.
+* ----------------------------------------------------------------------
+* Compute ( BASE ^ KEY ) MOD MODULUS for large prime numbers suitable for
+* RSA encryption.  See description at http://en.wikipedia.org/wiki/RSA
+*
+* Copyright (C) 2011
+* Author: Jim Cooke (Australia)
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+  DATA: BINNUM TYPE ZNINJA_RSA_CHAR_30,
+        LEN TYPE I,
+        IDX TYPE I.
+
+  CALL METHOD ZNINJA_RSA_CLASS=&gt;DEC2BIN
+    EXPORTING
+      DECNUM = KEY
+    IMPORTING
+      BINNUM = BINNUM.
+
+  LEN = STRLEN( BINNUM ).
+  RESULT = 1.
+  IDX = 0.
+  DO.
+    IF IDX &gt;= LEN.
+      EXIT.
+    ENDIF.
+    RESULT = ( RESULT * RESULT ) MOD MODULUS.
+    IF BINNUM+IDX(1) = 1.
+      RESULT = ( RESULT * BASE ) MOD MODULUS.
+    ENDIF.
+    IDX = IDX + 1.
+  ENDDO.
+endmethod.</source>
+  </method>
+ </CLAS>
+ <PROG NAME="ZNINJA_RSA_TEST" VARCL="X" SUBC="1" APPL="S" CNAM="SAPNINJA" CDAT="20120319" UNAM="SAPNINJA" UDAT="20120319" VERN="000016" RSTAT="T" RMAND="001" RLOAD="E" FIXPT="X" SDATE="20120319" STIME="134849" IDATE="20120319" ITIME="134849" UCCHECK="X">
+  <textPool>
+   <language SPRAS="E">
+    <textElement ID="R" ENTRY="Program ZNINJA_RSA_TEST" LENGTH="23 "/>
+    <textElement ID="S" KEY="ENCRYPT" ENTRY="        Number to encrypt" LENGTH="25 "/>
+    <textElement ID="S" KEY="MODULUS" ENTRY="        Keypair Modulus" LENGTH="23 "/>
+    <textElement ID="S" KEY="PRIKEY" ENTRY="        Private Key" LENGTH="19 "/>
+    <textElement ID="S" KEY="PUBKEY" ENTRY="        Public Key" LENGTH="18 "/>
+   </language>
+  </textPool>
+  <source>REPORT  ZNINJA_RSA_TEST.
+
+PARAMETERS: PUBKEY TYPE ZNINJA_RSA_QUAN_15_0 DEFAULT 17,
+            PRIKEY TYPE ZNINJA_RSA_QUAN_15_0 DEFAULT 2753,
+            MODULUS TYPE ZNINJA_RSA_QUAN_15_0 DEFAULT 3233,
+            ENCRYPT TYPE ZNINJA_RSA_QUAN_15_0 DEFAULT 65.
+
+DATA: ENCRYPTED TYPE ZNINJA_RSA_QUAN_15_0,
+      DECRYPTED TYPE ZNINJA_RSA_QUAN_15_0.
+
+CALL METHOD ZNINJA_RSA_CLASS=&gt;MODEXP
+   EXPORTING
+      BASE = ENCRYPT
+      KEY = PUBKEY
+      MODULUS = MODULUS
+   IMPORTING
+      RESULT = ENCRYPTED.
+
+WRITE: / ENCRYPT,&apos;is encrypted to&apos;,ENCRYPTED.
+
+CALL METHOD ZNINJA_RSA_CLASS=&gt;MODEXP
+   EXPORTING
+      BASE = ENCRYPTED
+      KEY = PRIKEY
+      MODULUS = MODULUS
+   IMPORTING
+      RESULT = DECRYPTED.
+
+WRITE: / ENCRYPTED,&apos;is decrypted to&apos;,DECRYPTED.</source>
+ </PROG>
+ <CLAS CLSNAME="ZNINJA_RSA_CLASS" VERSION="1" LANGU="E" DESCRIPT="RSA Encryption Class Methods" UUID="000C29F8B16C1EE19CAE86A2DA432A74" CATEGORY="00" EXPOSURE="2" STATE="1" RELEASE="0" AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" CHGDANYON="00000000" CLSFINAL="X" CLSCCINCL="X" FIXPT="X" UNICODE="X" R3RELEASE="702" CLSBCCAT="00" DURATION_TYPE="0 " RISK_LEVEL="0 ">
+  <publicSection>class ZNINJA_RSA_CLASS definition
+  public
+  final
+  create public .
+
+public section.
+*&quot;* public components of class ZNINJA_RSA_CLASS
+*&quot;* do not include other source files here!!!
+
+  class-methods BIN2DEC
+    importing
+      value(BINNUM) type ZNINJA_RSA_CHAR_30
+    exporting
+      value(DECNUM) type ZNINJA_RSA_QUAN_15_0 .
+  class-methods DEC2BIN
+    importing
+      value(DECNUM) type ZNINJA_RSA_QUAN_15_0
+    exporting
+      value(BINNUM) type ZNINJA_RSA_CHAR_30 .
+  class-methods MODEXP
+    importing
+      value(BASE) type ZNINJA_RSA_QUAN_15_0
+      value(KEY) type ZNINJA_RSA_QUAN_15_0
+      value(MODULUS) type ZNINJA_RSA_QUAN_15_0
+    exporting
+      value(RESULT) type ZNINJA_RSA_QUAN_15_0 .</publicSection>
+  <protectedSection>protected section.
+*&quot;* protected components of class ZNINJA_RSA_CLASS
+*&quot;* do not include other source files here!!!</protectedSection>
+  <privateSection>private section.
+*&quot;* private components of class ZNINJA_RSA_CLASS
+*&quot;* do not include other source files here!!!</privateSection>
+  <localImplementation>*&quot;* use this source file for the definition and implementation of
+*&quot;* local helper classes, interface definitions and type
+*&quot;* declarations</localImplementation>
+  <localTypes>*&quot;* use this source file for any type of declarations (class
+*&quot;* definitions, interfaces or type declarations) you need for
+*&quot;* components in the private section</localTypes>
+  <localMacros>*&quot;* use this source file for any macro definitions you need
+*&quot;* in the implementation part of the class</localMacros>
+  <method CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="BIN2DEC" VERSION="1" LANGU="E" DESCRIPT="Convert binary to decimal" EXPOSURE="2" STATE="1" EDITORDER="1 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" MTDTYPE="0" MTDDECLTYP="1" R3RELEASE="702" BCMTDCAT="00" BCMTDSYN="0">
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="BIN2DEC" SCONAME="BINNUM" VERSION="1" LANGU="E" DESCRIPT="CHAR data element with 30 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="1 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_CHAR_30"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="BIN2DEC" SCONAME="DECNUM" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="2 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="1" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <source>method BIN2DEC.
+* ----------------------------------------------------------------------
+* Convert binary number to decimal.
+* Copyright (C) 2011
+* Author: Jim Cooke (Australia)
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+* ----------------------------------------------------------------------
+  DATA: BIT TYPE I,
+        POW TYPE I,
+        IDX TYPE I.
+  CONDENSE BINNUM NO-GAPS.
+  DECNUM = 0.
+  POW = 0.
+  IDX = STRLEN( BINNUM ) - 1.
+  DO.
+    BIT = BINNUM+IDX(1).
+    DECNUM = DECNUM + ( BIT * ( 2 ** POW ) ).
+    POW = POW + 1.
+    IDX = IDX - 1.
+    IF IDX &lt; 0.
+      EXIT.
+    ENDIF.
+  ENDDO.
+endmethod.</source>
+  </method>
+  <method CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="DEC2BIN" VERSION="1" LANGU="E" DESCRIPT="Convert decimal to binary" EXPOSURE="2" STATE="1" EDITORDER="2 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" MTDTYPE="0" MTDDECLTYP="1" R3RELEASE="702" BCMTDCAT="00" BCMTDSYN="0">
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="DEC2BIN" SCONAME="DECNUM" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="1 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="DEC2BIN" SCONAME="BINNUM" VERSION="1" LANGU="E" DESCRIPT="CHAR data element with 30 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="2 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="1" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_CHAR_30"/>
+   <source>method DEC2BIN.
+* ----------------------------------------------------------------------
+* Convert decimal number to binary.
+* Copyright (C) 2011
+* Author: Jim Cooke (Australia)
+* Contributors:  David Henn (04/01/2012)
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+* ----------------------------------------------------------------------
+  DATA BUFFER TYPE STRING.
+  DATA BIT TYPE C.
+  DATA L_DECNUM LIKE DECNUM.
+  L_DECNUM = DECNUM.
+
+  DO.
+    CLEAR BIT.
+    BIT = L_DECNUM MOD 2.
+    L_DECNUM = L_DECNUM DIV 2.
+    CONCATENATE BIT BUFFER INTO BUFFER.
+    IF L_DECNUM = 0.
+      EXIT.
+    ENDIF.
+  ENDDO.
+  BINNUM = BUFFER.
+endmethod.</source>
+  </method>
+  <method CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" VERSION="1" LANGU="E" DESCRIPT="RSA modular exponentiation function" EXPOSURE="2" STATE="1" EDITORDER="3 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" MTDTYPE="0" MTDDECLTYP="1" R3RELEASE="702" BCMTDCAT="00" BCMTDSYN="0">
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" SCONAME="BASE" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="1 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" SCONAME="KEY" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="2 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" SCONAME="MODULUS" VERSION="1" LANGU="E" DESCRIPT="QUAN data element with 15 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="3 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="0" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <parameter CLSNAME="ZNINJA_RSA_CLASS" CMPNAME="MODEXP" SCONAME="RESULT" VERSION="1" LANGU="E" DESCRIPT="CHAR data element with 30 characters" CMPTYPE="1" MTDTYPE="0" EDITORDER="4 " DISPID="0 " AUTHOR="SAPNINJA" CREATEDON="20120319" CHANGEDON="00000000" PARDECLTYP="1" PARPASSTYP="0" TYPTYPE="1" TYPE="ZNINJA_RSA_QUAN_15_0"/>
+   <source>method MODEXP.
+* ----------------------------------------------------------------------
+* Compute ( BASE ^ KEY ) MOD MODULUS for large prime numbers suitable for
+* RSA encryption.  See description at http://en.wikipedia.org/wiki/RSA
+*
+* Copyright (C) 2011
+* Author: Jim Cooke (Australia)
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+  DATA: BINNUM TYPE ZNINJA_RSA_CHAR_30,
+        LEN TYPE I,
+        IDX TYPE I.
+
+  CALL METHOD ZNINJA_RSA_CLASS=&gt;DEC2BIN
+    EXPORTING
+      DECNUM = KEY
+    IMPORTING
+      BINNUM = BINNUM.
+
+  LEN = STRLEN( BINNUM ).
+  RESULT = 1.
+  IDX = 0.
+  DO.
+    IF IDX &gt;= LEN.
+      EXIT.
+    ENDIF.
+    RESULT = ( RESULT * RESULT ) MOD MODULUS.
+    IF BINNUM+IDX(1) = 1.
+      RESULT = ( RESULT * BASE ) MOD MODULUS.
+    ENDIF.
+    IDX = IDX + 1.
+  ENDDO.
+endmethod.</source>
+  </method>
+ </CLAS>
+ <DOMA DOMNAME="ZNINJA_RSA_CHAR_30" DDLANGUAGE="E" DATATYPE="CHAR" LENG="000030" OUTPUTLEN="000030" DECIMALS="000000" MASKLEN="0000" DDTEXT="Domain for type CHAR with 30 characters" AUTHCLASS="00" AS4USER="SAPNINJA" AS4DATE="20120319" AS4TIME="143605" OUTPUTSTYLE="00"/>
+ <DOMA DOMNAME="ZNINJA_RSA_QUAN_15_0" DDLANGUAGE="E" DATATYPE="QUAN" LENG="000015" OUTPUTLEN="000019" DECIMALS="000000" MASKLEN="0000" DDTEXT="Domain for type QUAN with 15 characters" AUTHCLASS="00" AS4USER="SAPNINJA" AS4DATE="20120319" AS4TIME="143807" OUTPUTSTYLE="00"/>
+ <DTEL ROLLNAME="ZNINJA_RSA_CHAR_30" DDLANGUAGE="E" DOMNAME="ZNINJA_RSA_CHAR_30" ROUTPUTLEN="000000" HEADLEN="30" SCRLEN1="10" SCRLEN2="15" SCRLEN3="20" DDTEXT="Data elelemt for type CHAR with 30 characters" REPTEXT="Binary Number" SCRTEXT_S="Bin. Num." SCRTEXT_M="Binary Number" SCRTEXT_L="Binary Number" AUTHCLASS="00" AS4USER="SAPNINJA" AS4DATE="20120319" AS4TIME="143843" DTELMASTER="E" DATATYPE="CHAR" LENG="000030" DECIMALS="000000" OUTPUTLEN="000030" REFKIND="D">
+  <tpara/>
+ </DTEL>
+ <DTEL ROLLNAME="ZNINJA_RSA_QUAN_15_0" DDLANGUAGE="E" DOMNAME="ZNINJA_RSA_QUAN_15_0" ROUTPUTLEN="000000" HEADLEN="14" SCRLEN1="10" SCRLEN2="15" SCRLEN3="20" DDTEXT="Data element for type QUAN with 15 characters" REPTEXT="Decimal Number" SCRTEXT_S="Dec. Num." SCRTEXT_M="Decimal Number" SCRTEXT_L="Decimal Number" AUTHCLASS="00" AS4USER="SAPNINJA" AS4DATE="20120319" AS4TIME="143808" DTELMASTER="E" DATATYPE="QUAN" LENG="000015" DECIMALS="000000" OUTPUTLEN="000019" REFKIND="D">
+  <tpara/>
+ </DTEL>
+ <PROG NAME="ZNINJA_RSA_TEST" VARCL="X" SUBC="1" APPL="S" CNAM="SAPNINJA" CDAT="20120319" UNAM="SAPNINJA" UDAT="20120319" VERN="000018" RSTAT="T" RMAND="001" RLOAD="E" FIXPT="X" SDATE="20120319" STIME="144002" IDATE="20120319" ITIME="144002" UCCHECK="X">
+  <textPool>
+   <language SPRAS="E">
+    <textElement ID="R" ENTRY="SAP Ninja RSA encryption test program" LENGTH="37 "/>
+    <textElement ID="S" KEY="ENCRYPT" ENTRY="        Number to encrypt" LENGTH="25 "/>
+    <textElement ID="S" KEY="MODULUS" ENTRY="        Keypair Modulus" LENGTH="23 "/>
+    <textElement ID="S" KEY="PRIKEY" ENTRY="        Private Key" LENGTH="19 "/>
+    <textElement ID="S" KEY="PUBKEY" ENTRY="        Public Key" LENGTH="18 "/>
+   </language>
+  </textPool>
+  <source>REPORT  ZNINJA_RSA_TEST.
+
+PARAMETERS: PUBKEY TYPE ZNINJA_RSA_QUAN_15_0 DEFAULT 17,
+            PRIKEY TYPE ZNINJA_RSA_QUAN_15_0 DEFAULT 2753,
+            MODULUS TYPE ZNINJA_RSA_QUAN_15_0 DEFAULT 3233,
+            ENCRYPT TYPE ZNINJA_RSA_QUAN_15_0 DEFAULT 65.
+
+DATA: ENCRYPTED TYPE ZNINJA_RSA_QUAN_15_0,
+      DECRYPTED TYPE ZNINJA_RSA_QUAN_15_0.
+
+CALL METHOD ZNINJA_RSA_CLASS=&gt;MODEXP
+   EXPORTING
+      BASE = ENCRYPT
+      KEY = PUBKEY
+      MODULUS = MODULUS
+   IMPORTING
+      RESULT = ENCRYPTED.
+
+WRITE: / ENCRYPT,&apos;is encrypted to&apos;,ENCRYPTED.
+
+CALL METHOD ZNINJA_RSA_CLASS=&gt;MODEXP
+   EXPORTING
+      BASE = ENCRYPTED
+      KEY = PRIKEY
+      MODULUS = MODULUS
+   IMPORTING
+      RESULT = DECRYPTED.
+
+WRITE: / ENCRYPTED,&apos;is decrypted to&apos;,DECRYPTED.</source>
+ </PROG>
+</nugget>
