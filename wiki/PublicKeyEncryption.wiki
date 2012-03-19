@@ -17,17 +17,17 @@ If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading
   * Start transaction SE24
   * Enter class ZSAPLINK
   * CTRL+F3 (Activate)
-  *  [Whole Worklist] button
-  * [Select All] button
-  * Press [Enter]
+  *  "Whole Worklist" button
+  * "Select All]"button
+  * Press "Enter"
 
  * Additionally download and install the "DDic - Data dictionary objects" plugin nugget from the code project.  The nugget name is NUGG_SAPLIN_DDIC-0.1.0.nugg.  Activate the plugin classes.
   * Start transaction SE24
   * Enter class ZSAPLINK_INDEX
   * CTRL+F3 (Activate)
-  *  [Whole Worklist] button
-  * [Select All] button
-  * Press [Enter]
+  * "Whole Worklist" button
+  * "Select All" button
+  * Press "Enter"
 
  * Run transaction SE80 and create a Package called "ZNINJA_RSA".
   * Package -> Create
@@ -62,9 +62,9 @@ and install it with the ZSAPLINK program.
   * Start transaction SE24
   * Class name = ZNINJA_RSA_CLASS
   * CTRL+F3 (Activate)
-  * [Whole Worklist] button
+  * "Whole Worklist" button
   * Select all objects
-  * Press [Enter] to activate
+  * Press "Enter" to activate
 
  * From SA38, execute the test program ZNINJA_RSA_TEST to test how it works
 
