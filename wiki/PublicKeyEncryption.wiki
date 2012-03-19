@@ -4,7 +4,7 @@
 
 It is beyond the scope of this WIKI to describe the theory behind public key encryption.  A very good summary can be found at http://en.wikipedia.org/wiki/RSA_(algorithm).  
 
-SAPNINJA has provided ABAP implementations of two functions that provide the most basic building blocks you need.
+This page has been updated from the original thanks two some coding improvements offered by someone in the community.  Also, I have removed the source code and clunky function modules originally supplied.  Thanks to another community member, I have been shown the wisdom of supplying the code via SAP nuggets.  Follow the instructions below to implement a class called ZNINJA_RSA_CLASS, which contains methods and data definitions you need to get going straight away.
 
 You will need to use your own creativity to use the function provided here to encrypt text.  You will also need to generate your own public key, private key and modulus to be secure.  There are tools available on the web that will help you do this. 
 
@@ -25,24 +25,26 @@ Assume the following<br>
 <br><br>
 To encrypt 65 with the public key
 {{{
-CALL FUNCTION ZMODEXP
-   IMPORTING
-      BASE    = 65
-      KEY     = 17
+CALL METHOD ZNINJA_RSA_CLASS=>MODEXP
+   EXPORTING
+      BASE = 65
+      KEY = 17
       MODULUS = 3233
-   IMPORTING 
-      RESULT = RESULT
+   IMPORTING
+      RESULT = ENCRYPTED.
+
 * The resulting encrypted number will be 2790.
 }}}
 To encrypt 2790 with the private key
 {{{
-CALL FUNCTION ZMODEXP
-   IMPORTING
-      BASE    = 2790
-      KEY     = 2753
+CALL METHOD ZNINJA_RSA_CLASS=>MODEXP
+   EXPORTING
+      BASE = 2790
+      KEY = 2753
       MODULUS = 3233
-   IMPORTING 
-      RESULT = RESULT
+   IMPORTING
+      RESULT = DECRYPTED.
+ESULT
 * The resulting decrypted number will be 65, which is what we started with
 }}}
 = Hypothetical Example =
