@@ -35,7 +35,8 @@ If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading
   * Short Description = SAP Ninja RSA Package
   * Application Component = BC
 
- * Download the nugget http://code.google.com/p/sapninja/source/browse/trunk/nuggets/NUGG_ZNINJA_RSA.nugg and install it with the ZSAPLINK program.
+ * Download the nugget http://sapninja.googlecode.com/svn/trunk/nuggets/NUGG_ZNINJA_RSA.nugg
+and install it with the ZSAPLINK program.
   * From transaction SA38, run program ZSAPLINK
   * Choose the "Import Nugget" radio button
   * Package Name = ZNINJA_RSA
