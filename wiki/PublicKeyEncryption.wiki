@@ -15,7 +15,7 @@ If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading
 
  * Visit the code project and install the ZSAPLINK programs as described in the documentation.  Remember to activate all the objects
   * Start transaction SE24
-  * Enter class ZSAPLINK_INDEX
+  * Enter class ZSAPLINK
   * CTRL+F3 (Activate)
   *  [Whole Worklist] button
   * [Select All] button
