@@ -13,13 +13,29 @@ You will need to use your own creativity to use the function provided here to en
 ==Installing the ZNINJA_RSA Nugget==
 If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading at the following link (this alone will be well worth your while to learn): http://wiki.sdn.sap.com/wiki/display/ABAP/SAPlink+User+Documentation
 
- # Visit the code project and install the ZSAPLINK programs as described in the documentation.
+ * Visit the code project and install the ZSAPLINK programs as described in the documentation.  Remember to activate all the objects
+  * Start transaction SE24
+  * Enter class ZSAPLINK_INDEX
+  * CTRL+F3 (Activate)
+  *  [Whole Worklist] button
+  * [Select All] button
+  * Press [Enter]
 
- # Additionally download and install the "DDic - Data dictionary objects" plugin nugget from the code project.  The nugget name is NUGG_SAPLIN_DDIC-0.1.0.nugg
+ * Additionally download and install the "DDic - Data dictionary objects" plugin nugget from the code project.  The nugget name is NUGG_SAPLIN_DDIC-0.1.0.nugg.  Activate the plugin classes.
+  * Start transaction SE24
+  * Enter class ZSAPLINK_INDEX
+  * CTRL+F3 (Activate)
+  *  [Whole Worklist] button
+  * [Select All] button
+  * Press [Enter]
 
- # Run transaction SE80 and create a Package called "ZNINJA_RSA".
+ * Run transaction SE80 and create a Package called "ZNINJA_RSA".
+  * Package -> Create
+  * Package = ZNINJA_RSA
+  * Short Description = SAP Ninja RSA Package
+  * Application Component = BC
 
- # Download the nugget http://code.google.com/p/sapninja/source/browse/trunk/nuggets/NUGG_ZNINJA_RSA.nugg and install it with the ZSAPLINK program.
+ * Download the nugget http://code.google.com/p/sapninja/source/browse/trunk/nuggets/NUGG_ZNINJA_RSA.nugg and install it with the ZSAPLINK program.
   * From transaction SA38, run program ZSAPLINK
   * Choose the "Import Nugget" radio button
   * Package Name = ZNINJA_RSA
@@ -27,9 +43,29 @@ If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading
   * Overwrite Originals = ticked
   * Execute
 
+ * Activate the domain data dictionary objects first
+  * Start transaction SE11
+  * Choose the "Domain" radio button
+  * Enter domain name = ZNINJA_RSA_CHAR_30
+  * Click the activate button
+  * Repeat for domain ZNINJA_RSA_QUAN_15_0
 
+ * Activate the data elements dictionary objects 
+  * SE11
+  * Choose the "Data Type" radio button
+  * Enter data type = ZNINJA_RSA_CHAR_30
+  * Click the activate button
+  * Repeat for domain ZNINJA_RSA_QUAN_15_0
+ 
+ * Activate the class and test program
+  * Start transaction SE24
+  * Class name = ZNINJA_RSA_CLASS
+  * CTRL+F3 (Activate)
+  * [Whole Worklist] button
+  * Select all objects
+  * Press [Enter] to activate
 
-
+ * From SA38, execute the test program ZNINJA_RSA_TEST to test how it works
 
 ==At it's simplest==
 Assume that we want to encrypt and decrypt the letter "A".  If we translate it to it's ASCII code of 65, the following will illustrate the use of the functions.<br>
