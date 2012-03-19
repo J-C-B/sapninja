@@ -13,10 +13,11 @@ You will need to use your own creativity to use the function provided here to en
 ==Installing the ZNINJA_RSA Nugget==
 If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading at the following link (this alone will be well worth your while to learn): http://wiki.sdn.sap.com/wiki/display/ABAP/SAPlink+User+Documentation
 
-# Visit the code project and install the ZSAPLINK programs as described in the documentation .
-# Additionally download and install the "DDic - Data dictionary objects" plugin nugget from the code project.  The nugget name is NUGG_SAPLIN_DDIC-0.1.0.nugg
-# Run transaction SE80 and create a Package called "ZNINJA_RSA"
-#
+* Visit the code project and install the ZSAPLINK programs as described in the documentation .
+* Additionally download and install the "DDic - Data dictionary objects" plugin nugget from the code project.  The nugget name is NUGG_SAPLIN_DDIC-0.1.0.nugg
+* Run transaction SE80 and create a Package called "ZNINJA_RSA"
+* Download the nugget http://code.google.com/p/sapninja/source/browse/trunk/nuggets/NUGG_ZNINJA_RSA.nugg and install it with the ZSAPLINK program.
+
 
 ==At it's simplest==
 Assume that we want to encrypt and decrypt the letter "A".  If we translate it to it's ASCII code of 65, the following will illustrate the use of the functions.<br>
