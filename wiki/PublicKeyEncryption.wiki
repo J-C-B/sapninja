@@ -44,6 +44,11 @@ and install it with the ZSAPLINK program.
   * Overwrite Originals = ticked
   * Execute
 
+ * The nugget doesn't populate the ZNINJA_RSA package objects properly
+  * Start transaction SE80 and view Package object ZNINJA_RSA (double-click it)
+  * From the menu, choose _Utilities_ -> _Rebuild Object List_
+  * All the package objects will now appear correctly.
+
  * Activate the domain data dictionary objects first
   * Start transaction SE11
   * Choose the "Domain" radio button
