@@ -11,23 +11,11 @@ You will need to use your own creativity to use the function provided here to en
 
 =Details=
 ==Installing the ZNINJA_RSA Nugget==
-If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading at the following link (this alone will be well worth your while to learn): http://wiki.sdn.sap.com/wiki/display/ABAP/SAPlink+User+Documentation
+If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading at the following link (this alone will be well worth your while to learn): http://wiki.sdn.sap.com/wiki/display/ABAP/SAPlink+User+Documentation 
 
- * Visit the code project and install the ZSAPLINK programs as described in the documentation.  Remember to activate all the objects
-  * Start transaction SE24
-  * Enter class ZSAPLINK
-  * CTRL+F3 (Activate)
-  *  "Whole Worklist" button
-  * "Select All]"button
-  * Press "Enter"
+As a guide to help you, look at the screenshots from this document: http://code.google.com/p/sapninja/downloads/detail?name=Ninja_SAPlink_Instructions.pdf&can=2&q=
 
- * Additionally download and install the "DDic - Data dictionary objects" plugin nugget from the code project.  The nugget name is NUGG_SAPLIN_DDIC-0.1.0.nugg.  Activate the plugin classes.
-  * Start transaction SE24
-  * Enter class ZSAPLINK_INDEX
-  * CTRL+F3 (Activate)
-  * "Whole Worklist" button
-  * "Select All" button
-  * Press "Enter"
+ * To continue, you will need to have installed the DDIC and Function Group plug-in nuggets from the code project as shown in the screenshot document. 
 
  * Run transaction SE80 and create a Package called "ZNINJA_RSA".
   * Package -> Create
@@ -49,19 +37,7 @@ and install it with the ZSAPLINK program.
   * From the menu, choose _Utilities_ -> _Rebuild Object List_
   * All the package objects will now appear correctly.
 
- * Activate the domain data dictionary objects first
-  * Start transaction SE11
-  * Choose the "Domain" radio button
-  * Enter domain name = ZNINJA_RSA_CHAR_30
-  * Click the activate button
-  * Repeat for domain ZNINJA_RSA_QUAN_15_0
-
- * Activate the data elements dictionary objects 
-  * SE11
-  * Choose the "Data Type" radio button
-  * Enter data type = ZNINJA_RSA_CHAR_30
-  * Click the activate button
-  * Repeat for domain ZNINJA_RSA_QUAN_15_0
+ * Activate the DDIC objects used by the class.  Follow the instructions in the document http://code.google.com/p/sapninja/downloads/detail?name=Ninja_Mass_DDIC_Activation.pdf&can=2&q= for instructions.
  
  * Activate the class and test program
   * Start transaction SE24
