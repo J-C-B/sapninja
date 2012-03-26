@@ -13,7 +13,7 @@ You will need to use your own creativity to use the function provided here to en
 ==Installing the ZNINJA_RSA Nugget==
 If you are unfamiliar with "SAP Nuggets", you need to do a little bit of reading at the following link (this alone will be well worth your while to learn): http://wiki.sdn.sap.com/wiki/display/ABAP/SAPlink+User+Documentation 
 
-As a guide to help you, look at the screenshots from this document: http://code.google.com/p/sapninja/downloads/detail?name=Ninja_SAPlink_Instructions.pdf&can=2&q=
+As a guide to help you, look at the screenshots from this document: http://sapninja.googlecode.com/files/Ninja_SAPlink_Instructions.pdf
 
  * To continue, you will need to have installed the DDIC and Function Group plug-in nuggets from the code project as shown in the screenshot document. 
 
