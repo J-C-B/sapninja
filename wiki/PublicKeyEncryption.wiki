@@ -37,7 +37,7 @@ and install it with the ZSAPLINK program.
   * From the menu, choose _Utilities_ -> _Rebuild Object List_
   * All the package objects will now appear correctly.
 
- * Activate the DDIC objects used by the class.  Follow the instructions in the document http://code.google.com/p/sapninja/downloads/detail?name=Ninja_Mass_DDIC_Activation.pdf&can=2&q= for instructions.
+ * Activate the DDIC objects used by the class.  Follow the instructions in the document http://sapninja.googlecode.com/files/Ninja_Mass_DDIC_Activation.pdf for instructions.
  
  * Activate the class and test program
   * Start transaction SE24
