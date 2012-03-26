@@ -23,14 +23,13 @@ As a guide to help you, look at the screenshots from this document: http://sapni
   * Short Description = SAP Ninja RSA Package
   * Application Component = BC
 
- * Download the nugget (right-click the link and SAVE) http://sapninja.googlecode.com/svn/trunk/nuggets/NUGG_ZNINJA_RSA.nugg
-and install it with the ZSAPLINK program.
+ * Download the nugget (right-click the link and SAVE) http://sapninja.googlecode.com/svn/trunk/nuggets/NUGG_ZNINJA_RSA.nugg and install it with the ZSAPLINK program.
   * From transaction SA38, run program ZSAPLINK
-  * Choose the "Import Nugget" radio button
-  * Package Name = ZNINJA_RSA
-  * Nugget File Name - NUGG_ZNINJA_RSA.nugg
-  * Overwrite Originals = ticked
-  * Execute
+   * Choose the "Import Nugget" radio button
+   * Package Name = ZNINJA_RSA
+   * Nugget File Name - NUGG_ZNINJA_RSA.nugg
+   * Overwrite Originals = ticked
+   * Execute
 
  * The nugget doesn't populate the ZNINJA_RSA package objects properly
   * Start transaction SE80 and view Package object ZNINJA_RSA (double-click it)
@@ -39,15 +38,10 @@ and install it with the ZSAPLINK program.
 
  * Activate the DDIC objects used by the class.  Follow the instructions in the document http://sapninja.googlecode.com/files/Ninja_Mass_DDIC_Activation.pdf for instructions.
  
- * Activate the class and test program
-  * Start transaction SE24
-  * Class name = ZNINJA_RSA_CLASS
-  * CTRL+F3 (Activate)
-  * "Whole Worklist" button
-  * Select all objects
-  * Press "Enter" to activate
+ * Activate the objects
+  * Start transaction SE38 and enter program name _ZNINJA_RSA_ACTIVATE_.  Click on the _Activate_ button and then the _Execute_ button.  This will activate the RSA class and methods.
 
- * From SA38, execute the test program ZNINJA_RSA_TEST to test how it works
+  * Start transaction SE38 and enter the program name _ZNINJA_RSA_TEST_.   Click on the _Activate_ button and then the _Execute_ button.  This will execute the test program, which demonstrates how the class can be used for encryption and decryption.
 
 ==At it's simplest==
 Assume that we want to encrypt and decrypt the letter "A".  If we translate it to it's ASCII code of 65, the following will illustrate the use of the functions.<br>
